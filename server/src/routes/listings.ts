@@ -1,0 +1,240 @@
+import express, { Request, Response } from 'express';
+import { ListingService } from '../services/listingService';
+import { FriendService } from '../services/friendService';
+import { ProfileService } from '../services/profileService';
+import { ListingType } from '../types/database';
+import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+
+const router = express.Router();
+const listingService = new ListingService();
+const friendService = new FriendService();
+const profileService = new ProfileService();
+
+router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const {
+      title,
+      description,
+      listingType,
+      propertyType,
+      price,
+      address,
+      city,
+      state,
+      zipCode,
+      latitude,
+      longitude,
+      amenities,
+      images,
+      availableDate,
+      roomDetails
+    } = req.body;
+
+    if (!title || !description || !listingType || price === undefined || !address || !city || !state || !zipCode || !availableDate) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const listingData = {
+      title,
+      description,
+      listing_type: listingType,
+      property_type: propertyType,
+      price: Number(price),
+      address,
+      city,
+      state: state.toUpperCase(),
+      zip_code: zipCode,
+      latitude: latitude ? Number(latitude) : null,
+      longitude: longitude ? Number(longitude) : null,
+      amenities: amenities || [],
+      images: images || [],
+      available_date: availableDate,
+      room_details: roomDetails || null,
+      owner_id: user.id
+    };
+
+    const listing = await listingService.createListing(listingData);
+
+    res.status(201).json({
+      message: 'Listing created successfully',
+      listing
+    });
+  } catch (error) {
+    console.error('Create listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const { type, city, state, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
+    
+    const filters: any = {};
+    
+    if (type && Object.values(ListingType).includes(type as ListingType)) {
+      filters.listingType = type;
+    }
+
+    if (city) {
+      filters.city = city as string;
+    }
+
+    if (state) {
+      filters.state = (state as string).toUpperCase();
+    }
+
+    if (minPrice) {
+      filters.minPrice = Number(minPrice);
+    }
+
+    if (maxPrice) {
+      filters.maxPrice = Number(maxPrice);
+    }
+
+    // Get listings - RLS will automatically filter to friend network
+    const listings = await listingService.getActiveListings(filters);
+
+    // Simple pagination for now (can be improved with proper offset/limit)
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    
+    const paginatedListings = listings.slice(startIndex, endIndex);
+
+    res.json({
+      listings: paginatedListings,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: listings.length,
+        pages: Math.ceil(listings.length / limitNum)
+      }
+    });
+  } catch (error) {
+    console.error('Get listings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/my-listings', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const listings = await listingService.getListingsByOwner(user.id);
+    res.json({ listings });
+  } catch (error) {
+    console.error('Get my listings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const listing = await listingService.getListingById(req.params.id);
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    // RLS will automatically enforce friend network access
+    res.json({ listing });
+  } catch (error) {
+    console.error('Get listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const listing = await listingService.getListingById(req.params.id);
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (listing.owner_id !== user.id) {
+      return res.status(403).json({ error: 'You can only update your own listings' });
+    }
+
+    const updates: any = { ...req.body };
+    // Convert frontend field names to database field names
+    if (updates.listingType) {
+      updates.listing_type = updates.listingType;
+      delete updates.listingType;
+    }
+    if (updates.propertyType) {
+      updates.property_type = updates.propertyType;
+      delete updates.propertyType;
+    }
+    if (updates.availableDate) {
+      updates.available_date = updates.availableDate;
+      delete updates.availableDate;
+    }
+    if (updates.roomDetails) {
+      updates.room_details = updates.roomDetails;
+      delete updates.roomDetails;
+    }
+
+    const updatedListing = await listingService.updateListing(req.params.id, updates);
+
+    res.json({
+      message: 'Listing updated successfully',
+      listing: updatedListing
+    });
+  } catch (error) {
+    console.error('Update listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const listing = await listingService.getListingById(req.params.id);
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (listing.owner_id !== user.id) {
+      return res.status(403).json({ error: 'You can only delete your own listings' });
+    }
+
+    await listingService.deleteListing(req.params.id);
+
+    res.json({ message: 'Listing deleted successfully' });
+  } catch (error) {
+    console.error('Delete listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+export default router;

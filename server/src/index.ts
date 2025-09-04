@@ -1,0 +1,46 @@
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import authRoutes from './routes/auth';
+import listingRoutes from './routes/listings';
+import friendRoutes from './routes/friends';
+import facebookRoutes from './routes/facebook';
+import { supabase } from './config/supabase';
+
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+app.get('/', (req, res) => {
+  res.json({ message: 'Apartment Rental API is running with Supabase!' });
+});
+
+app.use('/api/auth', authRoutes);
+app.use('/api/listings', listingRoutes);
+app.use('/api/friends', friendRoutes);
+app.use('/api/facebook', facebookRoutes);
+
+const initializeApp = async () => {
+  try {
+    // Test Supabase connection
+    const { data, error } = await supabase.from('profiles').select('count').limit(1);
+    if (error) {
+      console.warn('Supabase connection warning:', error.message);
+    } else {
+      console.log('Supabase connected successfully');
+    }
+  } catch (error) {
+    console.error('Supabase connection failed:', error);
+  }
+};
+
+initializeApp();
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});

@@ -32,14 +32,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const storedUser = localStorage.getItem('user');
         
         if (token && storedUser) {
-          setUser(JSON.parse(storedUser));
+          // Set user immediately from localStorage for fast UI response
+          const parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
           
-          const response = await api.get('/auth/me');
-          setUser(response.data.user);
+          try {
+            // Validate token and refresh user data
+            const response = await api.get('/auth/me');
+            setUser(response.data.user);
+          } catch (error) {
+            // If token is invalid, clear storage but don't throw
+            console.warn('Token validation failed, clearing auth data');
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setUser(null);
+          }
         }
       } catch (error) {
+        console.error('Auth initialization error:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setUser(null);
       } finally {
         setLoading(false);
       }

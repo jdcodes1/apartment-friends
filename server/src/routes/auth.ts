@@ -58,11 +58,14 @@ router.post('/register', async (req: Request<{}, {}, RegisterBody>, res: Respons
     res.status(201).json({
       message: 'User created successfully',
       user: profile,
+      token: user.access_token,
       session: user
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Registration error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error message:', error.message);
+    console.error('Error details:', error.details);
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 
@@ -76,18 +79,24 @@ router.post('/login', async (req: Request<{}, {}, LoginBody>, res: Response) => 
 
     const { user, profile } = await authService.signIn(email.toLowerCase(), password);
 
-    if (!user || !profile) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+    if (!user) {
+      return res.status(401).json({ error: 'Authentication failed' });
+    }
+
+    if (!profile) {
+      console.error('Profile not found for user:', user.id);
+      return res.status(401).json({ error: 'Profile not found' });
     }
 
     res.json({
       message: 'Login successful',
       user: profile,
+      token: user.access_token,
       session: user
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
-    res.status(401).json({ error: 'Invalid credentials' });
+    res.status(401).json({ error: error.message || 'Invalid credentials' });
   }
 });
 

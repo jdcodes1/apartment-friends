@@ -23,10 +23,7 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
       listingType,
       propertyType,
       price,
-      address,
-      city,
-      state,
-      zipCode,
+      location,
       latitude,
       longitude,
       amenities,
@@ -35,8 +32,31 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
       roomDetails
     } = req.body;
 
-    if (!title || !description || !listingType || price === undefined || !address || !city || !state || !zipCode || !availableDate) {
-      return res.status(400).json({ error: 'Missing required fields' });
+    // Extract address fields from location object if nested, or use top-level fields
+    const address = location?.address || req.body.address;
+    const city = location?.city || req.body.city;
+    const state = location?.state || req.body.state;
+    const zipCode = location?.zipCode || req.body.zipCode;
+
+    const missingFields = [];
+    if (!title) missingFields.push('title');
+    if (!description) missingFields.push('description');
+    if (!listingType) missingFields.push('listingType');
+    if (price === undefined) missingFields.push('price');
+    if (!address) missingFields.push('address');
+    if (!city) missingFields.push('city');
+    if (!state) missingFields.push('state');
+    if (!zipCode) missingFields.push('zipCode');
+    if (!availableDate) missingFields.push('availableDate');
+
+    if (missingFields.length > 0) {
+      console.log('Missing fields:', missingFields);
+      console.log('Request body:', req.body);
+      return res.status(400).json({ 
+        error: 'Missing required fields', 
+        missingFields,
+        received: Object.keys(req.body)
+      });
     }
 
     const listingData = {

@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import mongoose from 'mongoose';
 
 export const hashPassword = async (password: string): Promise<string> => {
   const saltRounds = 10;
@@ -14,13 +13,13 @@ export const comparePassword = async (
   return await bcrypt.compare(password, hashedPassword);
 };
 
-export const generateToken = (userId: mongoose.Types.ObjectId): string => {
+export const generateToken = (userId: string): string => {
   const secret = process.env.JWT_SECRET;
   if (!secret) {
     throw new Error('JWT_SECRET is not defined');
   }
   
-  return jwt.sign({ userId: userId.toString() }, secret, {
+  return jwt.sign({ userId }, secret, {
     expiresIn: '7d'
   });
 };

@@ -120,15 +120,36 @@ router.get('/list', authenticateToken, async (req: AuthenticatedRequest, res: Re
   }
 });
 
-router.get('/network/:degree?', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.get('/network', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { user, profile } = req;
     if (!user || !profile) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    const degree = parseInt(req.params.degree || '3');
-    if (degree < 1 || degree > 6) {
+    const degree = 3; // Default to 3 degrees
+    const network = await friendService.getFriendNetworkUpToDegree(user.id, degree);
+
+    res.json({
+      network,
+      count: network.length,
+      degree
+    });
+  } catch (error) {
+    console.error('Get friend network error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+router.get('/network/:degree', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const degree = parseInt(req.params.degree);
+    if (isNaN(degree) || degree < 1 || degree > 6) {
       return res.status(400).json({ error: 'Degree must be between 1 and 6' });
     }
 

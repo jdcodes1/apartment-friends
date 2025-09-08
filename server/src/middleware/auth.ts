@@ -17,17 +17,15 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
+    console.log('Auth header:', authHeader);
+    console.log('Parsed token:', token ? `${token.substring(0, 20)}...` : 'null');
+
     if (!token) {
       return res.status(401).json({ error: 'Access token required' });
     }
 
-    // Set the token for this session
-    await supabaseClient.auth.setSession({
-      access_token: token,
-      refresh_token: '', // We don't need refresh token for this validation
-    });
-
-    const { data: { user }, error } = await supabaseClient.auth.getUser();
+    // Get user directly from JWT token without setting session
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
 
     if (error || !user) {
       console.error('Token validation error:', error);
@@ -57,12 +55,7 @@ export const optionalAuth = async (req: AuthenticatedRequest, res: Response, nex
     const token = authHeader && authHeader.split(' ')[1];
 
     if (token) {
-      await supabaseClient.auth.setSession({
-        access_token: token,
-        refresh_token: '',
-      });
-
-      const { data: { user }, error } = await supabaseClient.auth.getUser();
+      const { data: { user }, error } = await supabaseClient.auth.getUser(token);
 
       if (!error && user) {
         const profileService = new ProfileService();

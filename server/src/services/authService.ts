@@ -40,7 +40,8 @@ export class AuthService {
       }
     }
 
-    return { user: data.user, profile };
+    // Return session data that contains the access_token
+    return { user: data.session, profile };
   }
 
   async signIn(email: string, password: string): Promise<{ user: any; profile: Profile | null }> {
@@ -70,7 +71,8 @@ export class AuthService {
       }
     }
 
-    return { user: data.user, profile };
+    // Return session data that contains the access_token
+    return { user: data.session, profile };
   }
 
   async signOut(): Promise<void> {

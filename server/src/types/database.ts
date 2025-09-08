@@ -85,6 +85,7 @@ export interface Database {
           is_active: boolean;
           owner_id: string;
           room_details: RoomDetails | null;
+          share_token: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -107,6 +108,7 @@ export interface Database {
           is_active?: boolean;
           owner_id: string;
           room_details?: RoomDetails | null;
+          share_token?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -129,6 +131,7 @@ export interface Database {
           is_active?: boolean;
           owner_id?: string;
           room_details?: RoomDetails | null;
+          share_token?: string | null;
           created_at?: string;
           updated_at?: string;
         };

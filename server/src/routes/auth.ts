@@ -55,6 +55,9 @@ router.post('/register', async (req: Request<{}, {}, RegisterBody>, res: Respons
       await profileService.updateProfile(profile.id, { phone: phone.trim() });
     }
 
+    console.log('Registration success - User object keys:', Object.keys(user));
+    console.log('Access token exists:', !!user.access_token);
+
     res.status(201).json({
       message: 'User created successfully',
       user: profile,
@@ -88,10 +91,14 @@ router.post('/login', async (req: Request<{}, {}, LoginBody>, res: Response) => 
       return res.status(401).json({ error: 'Profile not found' });
     }
 
+    console.log('Login success - User object keys:', user ? Object.keys(user) : 'null');
+    console.log('User object:', user);
+    console.log('Access token exists:', !!(user && user.access_token));
+
     res.json({
       message: 'Login successful',
       user: profile,
-      token: user.access_token,
+      token: user?.access_token || null,
       session: user
     });
   } catch (error: any) {

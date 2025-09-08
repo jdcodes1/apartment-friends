@@ -162,6 +162,79 @@ router.get('/my-listings', authenticateToken, async (req: AuthenticatedRequest, 
   }
 });
 
+// Public endpoint to browse all shared listings (no auth required)
+router.get('/public', async (req: Request, res: Response) => {
+  try {
+    const { type, city, state, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
+    
+    const filters: any = {
+      hasShareToken: true // Only get listings that have share tokens
+    };
+    
+    if (type && Object.values(ListingType).includes(type as ListingType)) {
+      filters.listingType = type;
+    }
+
+    if (city) {
+      filters.city = city as string;
+    }
+
+    if (state) {
+      filters.state = (state as string).toUpperCase();
+    }
+
+    if (minPrice) {
+      filters.minPrice = Number(minPrice);
+    }
+
+    if (maxPrice) {
+      filters.maxPrice = Number(maxPrice);
+    }
+
+    // Get public listings
+    const listings = await listingService.getPublicListings(filters);
+
+    // Simple pagination
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    
+    const paginatedListings = listings.slice(startIndex, endIndex);
+
+    res.json({
+      listings: paginatedListings,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: listings.length,
+        pages: Math.ceil(listings.length / limitNum)
+      }
+    });
+  } catch (error) {
+    console.error('Get public listings error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Public endpoint to view shared listing (no auth required)
+router.get('/shared/:shareToken', async (req: Request, res: Response) => {
+  try {
+    const { shareToken } = req.params;
+
+    const listing = await listingService.getSharedListing(shareToken);
+
+    if (!listing) {
+      return res.status(404).json({ error: 'Shared listing not found or no longer available' });
+    }
+
+    res.json({ listing });
+  } catch (error) {
+    console.error('Get shared listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { user, profile } = req;
@@ -253,6 +326,71 @@ router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: 
     res.json({ message: 'Listing deleted successfully' });
   } catch (error) {
     console.error('Delete listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Generate share token for a listing (owner only)
+router.post('/:id/share', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const listing = await listingService.getListingById(req.params.id);
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (listing.owner.id !== user.id) {
+      return res.status(403).json({ error: 'You can only share your own listings' });
+    }
+
+    const shareToken = await listingService.generateShareToken(req.params.id);
+    
+    // Generate frontend URL, not backend API URL
+    const frontendUrl = process.env.NODE_ENV === 'production' 
+      ? process.env.FRONTEND_URL 
+      : 'http://localhost:5173';
+    
+    const shareUrl = `${frontendUrl}/shared/${shareToken}`;
+
+    res.json({
+      message: 'Share link generated successfully',
+      shareToken,
+      shareUrl
+    });
+  } catch (error) {
+    console.error('Generate share token error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Revoke share token for a listing (owner only)
+router.delete('/:id/share', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const listing = await listingService.getListingById(req.params.id);
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (listing.owner.id !== user.id) {
+      return res.status(403).json({ error: 'You can only manage sharing for your own listings' });
+    }
+
+    await listingService.revokeShareToken(req.params.id);
+
+    res.json({ message: 'Share link revoked successfully' });
+  } catch (error) {
+    console.error('Revoke share token error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

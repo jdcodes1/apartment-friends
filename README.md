@@ -75,11 +75,13 @@ apartments/
 ### Step 1: Supabase Project Setup
 
 1. **Create Supabase Account**
+
    - Go to [supabase.com](https://supabase.com)
-   - Click "Start your project" 
+   - Click "Start your project"
    - Sign up with GitHub (recommended)
 
 2. **Create New Project**
+
    - Click "New Project"
    - **Name**: `apartment-rental` (or your preferred name)
    - **Database Password**: Generate a strong password (save this!)
@@ -97,6 +99,7 @@ apartments/
 ### Step 2: Database Schema Setup
 
 1. **Open SQL Editor**
+
    - In Supabase dashboard, click "SQL Editor" (left sidebar)
    - Click "New query"
 
@@ -109,17 +112,20 @@ apartments/
 ### Step 3: Backend Setup
 
 1. **Navigate to server directory and install dependencies:**
+
    ```bash
    cd server
    npm install
    ```
 
 2. **Create environment file:**
+
    ```bash
    cp .env.example .env
    ```
 
 3. **Configure `server/.env` with your Supabase credentials:**
+
    ```env
    PORT=5000
    SUPABASE_URL=https://your-project-id.supabase.co
@@ -131,26 +137,30 @@ apartments/
    ```
 
 4. **Start the server:**
+
    ```bash
    npm run dev
    ```
-   
+
    You should see: `Supabase connected successfully` and `Server is running on port 5000`
 
 ### Step 4: Frontend Setup
 
 1. **Navigate to client directory and install dependencies:**
+
    ```bash
    cd client
    npm install
    ```
 
 2. **Create environment file:**
+
    ```bash
    cp .env.example .env
    ```
 
 3. **Configure `client/.env`:**
+
    ```env
    VITE_API_URL=http://localhost:5000/api
    VITE_SUPABASE_URL=https://your-project-id.supabase.co
@@ -285,19 +295,23 @@ This project is licensed under the MIT License.
 ### Common Issues
 
 1. **"Invalid URL" error when starting server**
+
    - Make sure your `SUPABASE_URL` in `.env` is a valid URL starting with `https://`
    - Remove any trailing slashes from the URL
 
 2. **"Invalid API key" or authentication errors**
+
    - Verify your `SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` are correct
    - Keys should be copied exactly from Supabase dashboard → Settings → API
 
 3. **Database connection issues**
+
    - Check your Supabase project is active and not paused
    - Verify the database schema was created successfully
    - Try refreshing your API keys
 
 4. **Friend network not working**
+
    - Ensure you have friend connections in the database
    - Check Row Level Security policies are enabled
    - Users must be within 3 degrees to see each other's listings
@@ -309,7 +323,7 @@ This project is licensed under the MIT License.
 ### Getting Help
 
 - Check the browser console for JavaScript errors
-- Check server logs for API errors  
+- Check server logs for API errors
 - Verify your environment variables are loaded correctly
 - Test API endpoints directly using a tool like Postman
 
@@ -328,9 +342,12 @@ This project is licensed under the MIT License.
 - [ ] Image upload for listings using Supabase Storage
 - [ ] Real-time messaging using Supabase Realtime
 - [ ] Push notifications for new listings
-- [ ] Mobile app development with Supabase Flutter/React Native
 - [ ] Integration with other social platforms
 - [ ] Advanced matching algorithms with PostgreSQL functions
 - [ ] Video tours and virtual walkthroughs
 - [ ] Payment integration for rent collection
-- [ ] Real-time chat and notifications
+
+TODOs:
+
+- add a way to comment or something on each listing?
+- enable deploying through vercel- client/server should work correctly.

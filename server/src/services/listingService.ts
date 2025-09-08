@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { Listing, ListingInsert, ListingUpdate } from '../types/database';
+import { Listing, ListingInsert, ListingUpdate, ListingPermission } from '../types/database';
 import { randomBytes } from 'crypto';
 
 export class ListingService {
@@ -68,6 +68,8 @@ export class ListingService {
         createdAt: data.profiles?.created_at
       },
       roomDetails: data.room_details,
+      permission: data.permission,
+      shareToken: data.share_token,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
@@ -93,41 +95,7 @@ export class ListingService {
 
     if (error) throw error;
     
-    // Transform data to match frontend expectations
-    return (data || []).map((listing: any) => ({
-      _id: listing.id,
-      title: listing.title,
-      description: listing.description,
-      listingType: listing.listing_type,
-      propertyType: listing.property_type,
-      price: listing.price,
-      location: {
-        address: listing.address,
-        city: listing.city,
-        state: listing.state,
-        zipCode: listing.zip_code,
-        coordinates: listing.latitude && listing.longitude ? {
-          lat: listing.latitude,
-          lng: listing.longitude
-        } : undefined
-      },
-      amenities: listing.amenities || [],
-      images: listing.images || [],
-      availableDate: listing.available_date,
-      isActive: listing.is_active,
-      owner: {
-        id: listing.profiles?.id,
-        email: listing.profiles?.email,
-        firstName: listing.profiles?.first_name,
-        lastName: listing.profiles?.last_name,
-        phone: listing.profiles?.phone,
-        profilePicture: listing.profiles?.profile_picture,
-        createdAt: listing.profiles?.created_at
-      },
-      roomDetails: listing.room_details,
-      createdAt: listing.created_at,
-      updatedAt: listing.updated_at
-    }));
+    return this.transformListings(data || []);
   }
 
   async getActiveListings(filters?: {
@@ -179,46 +147,35 @@ export class ListingService {
     const { data, error } = await query;
     if (error) throw error;
     
-    // Transform data to match frontend expectations
-    return (data || []).map((listing: any) => ({
-      _id: listing.id,
-      title: listing.title,
-      description: listing.description,
-      listingType: listing.listing_type,
-      propertyType: listing.property_type,
-      price: listing.price,
-      location: {
-        address: listing.address,
-        city: listing.city,
-        state: listing.state,
-        zipCode: listing.zip_code,
-        coordinates: listing.latitude && listing.longitude ? {
-          lat: listing.latitude,
-          lng: listing.longitude
-        } : undefined
-      },
-      amenities: listing.amenities || [],
-      images: listing.images || [],
-      availableDate: listing.available_date,
-      isActive: listing.is_active,
-      owner: {
-        id: listing.profiles?.id,
-        email: listing.profiles?.email,
-        firstName: listing.profiles?.first_name,
-        lastName: listing.profiles?.last_name,
-        profilePicture: listing.profiles?.profile_picture,
-        createdAt: listing.profiles?.created_at
-      },
-      roomDetails: listing.room_details,
-      createdAt: listing.created_at,
-      updatedAt: listing.updated_at
-    }));
+    return this.transformListings(data || []);
   }
 
   async updateListing(id: string, updates: ListingUpdate): Promise<Listing | null> {
     const { data, error } = await supabase
       .from('listings')
       .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  async updateListingPermission(id: string, permission: ListingPermission): Promise<Listing | null> {
+    // When setting to link_only, generate share token if it doesn't exist
+    let updateData: { permission: ListingPermission; share_token?: string } = { permission };
+    
+    if (permission === ListingPermission.LINK_ONLY) {
+      const existing = await this.getListingById(id);
+      if (!existing?.shareToken) {
+        updateData.share_token = randomBytes(32).toString('hex');
+      }
+    }
+
+    const { data, error } = await supabase
+      .from('listings')
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -261,41 +218,7 @@ export class ListingService {
 
     if (error) throw error;
     
-    // Transform data to match frontend expectations
-    return (data || []).map((listing: any) => ({
-      _id: listing.id,
-      title: listing.title,
-      description: listing.description,
-      listingType: listing.listing_type,
-      propertyType: listing.property_type,
-      price: listing.price,
-      location: {
-        address: listing.address,
-        city: listing.city,
-        state: listing.state,
-        zipCode: listing.zip_code,
-        coordinates: listing.latitude && listing.longitude ? {
-          lat: listing.latitude,
-          lng: listing.longitude
-        } : undefined
-      },
-      amenities: listing.amenities || [],
-      images: listing.images || [],
-      availableDate: listing.available_date,
-      isActive: listing.is_active,
-      owner: {
-        id: listing.profiles?.id,
-        email: listing.profiles?.email,
-        firstName: listing.profiles?.first_name,
-        lastName: listing.profiles?.last_name,
-        phone: listing.profiles?.phone,
-        profilePicture: listing.profiles?.profile_picture,
-        createdAt: listing.profiles?.created_at
-      },
-      roomDetails: listing.room_details,
-      createdAt: listing.created_at,
-      updatedAt: listing.updated_at
-    }));
+    return this.transformListings(data || []);
   }
 
   async generateShareToken(listingId: string): Promise<string> {
@@ -377,6 +300,8 @@ export class ListingService {
         createdAt: data.profiles?.created_at
       },
       roomDetails: data.room_details,
+      permission: data.permission,
+      shareToken: data.share_token,
       createdAt: data.created_at,
       updatedAt: data.updated_at
     };
@@ -398,7 +323,6 @@ export class ListingService {
     maxPrice?: number;
     city?: string;
     state?: string;
-    hasShareToken?: boolean;
   }): Promise<any[]> {
     let query = supabase
       .from('listings')
@@ -413,7 +337,7 @@ export class ListingService {
         )
       `)
       .eq('is_active', true)
-      .not('share_token', 'is', null); // Only get listings with share tokens
+      .eq('permission', 'public'); // Only get public listings
 
     if (filters) {
       if (filters.listingType) {
@@ -441,8 +365,11 @@ export class ListingService {
     const { data, error } = await query;
     if (error) throw error;
     
-    // Transform data to match frontend expectations
-    return (data || []).map((listing: any) => ({
+    return this.transformListings(data || []);
+  }
+
+  private transformListings(listings: any[]): any[] {
+    return listings.map((listing: any) => ({
       _id: listing.id,
       title: listing.title,
       description: listing.description,
@@ -465,15 +392,18 @@ export class ListingService {
       isActive: listing.is_active,
       owner: {
         id: listing.profiles?.id,
+        email: listing.profiles?.email,
         firstName: listing.profiles?.first_name,
         lastName: listing.profiles?.last_name,
+        phone: listing.profiles?.phone,
         profilePicture: listing.profiles?.profile_picture,
         createdAt: listing.profiles?.created_at
       },
       roomDetails: listing.room_details,
+      permission: listing.permission,
+      shareToken: listing.share_token,
       createdAt: listing.created_at,
-      updatedAt: listing.updated_at,
-      shareToken: listing.share_token
+      updatedAt: listing.updated_at
     }));
   }
 }

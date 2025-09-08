@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 import { ListingService } from '../services/listingService';
 import { FriendService } from '../services/friendService';
 import { ProfileService } from '../services/profileService';
-import { ListingType } from '../types/database';
+import { ListingType, ListingPermission } from '../types/database';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -56,6 +56,15 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
         error: 'Missing required fields', 
         missingFields,
         received: Object.keys(req.body)
+      });
+    }
+
+    // Validate listingType is one of the allowed values
+    if (!Object.values(ListingType).includes(listingType as ListingType)) {
+      return res.status(400).json({ 
+        error: 'Invalid listing type',
+        validTypes: Object.values(ListingType),
+        received: listingType
       });
     }
 
@@ -162,14 +171,12 @@ router.get('/my-listings', authenticateToken, async (req: AuthenticatedRequest, 
   }
 });
 
-// Public endpoint to browse all shared listings (no auth required)
+// Public endpoint to browse all public listings (no auth required)
 router.get('/public', async (req: Request, res: Response) => {
   try {
     const { type, city, state, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
     
-    const filters: any = {
-      hasShareToken: true // Only get listings that have share tokens
-    };
+    const filters: any = {};
     
     if (type && Object.values(ListingType).includes(type as ListingType)) {
       filters.listingType = type;
@@ -191,7 +198,7 @@ router.get('/public', async (req: Request, res: Response) => {
       filters.maxPrice = Number(maxPrice);
     }
 
-    // Get public listings
+    // Get only public listings (permission = 'public')
     const listings = await listingService.getPublicListings(filters);
 
     // Simple pagination
@@ -391,6 +398,48 @@ router.delete('/:id/share', authenticateToken, async (req: AuthenticatedRequest,
     res.json({ message: 'Share link revoked successfully' });
   } catch (error) {
     console.error('Revoke share token error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Update listing permission (owner only)
+router.patch('/:id/permission', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user, profile } = req;
+    if (!user || !profile) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const { permission } = req.body;
+
+    if (!permission || !Object.values(ListingPermission).includes(permission as ListingPermission)) {
+      return res.status(400).json({ 
+        error: 'Invalid permission value',
+        validPermissions: Object.values(ListingPermission)
+      });
+    }
+
+    const listing = await listingService.getListingById(req.params.id);
+    
+    if (!listing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (listing.owner.id !== user.id) {
+      return res.status(403).json({ error: 'You can only change permissions for your own listings' });
+    }
+
+    const updatedListing = await listingService.updateListingPermission(
+      req.params.id, 
+      permission as ListingPermission
+    );
+
+    res.json({
+      message: 'Listing permission updated successfully',
+      listing: updatedListing
+    });
+  } catch (error) {
+    console.error('Update listing permission error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

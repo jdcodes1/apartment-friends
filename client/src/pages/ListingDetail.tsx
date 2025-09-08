@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "../components/layout/Navigation";
-import { type Listing } from "../types";
+import PermissionSelector from "../components/listings/PermissionSelector";
+import { type Listing, ListingPermission } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import api from "../utils/api";
 import {
@@ -97,6 +98,17 @@ export default function ListingDetail() {
     }
   };
 
+  const handlePermissionUpdate = async (permission: ListingPermission) => {
+    if (!id) return;
+
+    await api.patch(`/listings/${id}/permission`, {
+      permission,
+    });
+
+    // Update the listing state with the new permission
+    setListing(prev => prev ? { ...prev, permission } : null);
+  };
+
   const isOwner = user && listing && user.id === listing.owner.id;
 
   // Debug logging
@@ -174,14 +186,20 @@ export default function ListingDetail() {
                 )}
 
                 {isOwner && (
-                  <button
-                    onClick={handleShare}
-                    disabled={shareLoading}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Share2 size={16} className="mr-2" />
-                    {shareLoading ? "Generating..." : "Share Listing"}
-                  </button>
+                  <div className="space-y-3">
+                    <PermissionSelector 
+                      listing={listing} 
+                      onUpdate={handlePermissionUpdate} 
+                    />
+                    <button
+                      onClick={handleShare}
+                      disabled={shareLoading}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Share2 size={16} className="mr-2" />
+                      {shareLoading ? "Generating..." : "Share Listing"}
+                    </button>
+                  </div>
                 )}
               </div>
             </div>

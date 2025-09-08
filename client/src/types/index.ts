@@ -1,5 +1,6 @@
 export interface User {
   _id: string;
+  id: string; // Add id as well for compatibility
   email: string;
   firstName: string;
   lastName: string;
@@ -31,6 +32,14 @@ export const PropertyType = {
 };
 
 export type PropertyType = 'studio' | '1br' | '2br' | '3br' | '4br+';
+
+export const ListingPermission = {
+  PRIVATE: 'private' as const,
+  LINK_ONLY: 'link_only' as const,
+  PUBLIC: 'public' as const
+};
+
+export type ListingPermission = 'private' | 'link_only' | 'public';
 
 export interface Location {
   address: string;
@@ -72,6 +81,8 @@ export interface Listing {
   createdAt: string;
   updatedAt: string;
   roomDetails?: RoomDetails;
+  permission: ListingPermission;
+  shareToken?: string;
 }
 
 export interface FriendConnection {

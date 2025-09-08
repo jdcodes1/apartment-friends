@@ -86,6 +86,7 @@ export interface Database {
           owner_id: string;
           room_details: RoomDetails | null;
           share_token: string | null;
+          permission: 'private' | 'link_only' | 'public';
           created_at: string;
           updated_at: string;
         };
@@ -109,6 +110,7 @@ export interface Database {
           owner_id: string;
           room_details?: RoomDetails | null;
           share_token?: string | null;
+          permission?: 'private' | 'link_only' | 'public';
           created_at?: string;
           updated_at?: string;
         };
@@ -132,6 +134,7 @@ export interface Database {
           owner_id?: string;
           room_details?: RoomDetails | null;
           share_token?: string | null;
+          permission?: 'private' | 'link_only' | 'public';
           created_at?: string;
           updated_at?: string;
         };
@@ -177,4 +180,10 @@ export enum PropertyType {
   TWO_BEDROOM = '2br',
   THREE_BEDROOM = '3br',
   FOUR_PLUS_BEDROOM = '4br+'
+}
+
+export enum ListingPermission {
+  PRIVATE = 'private',
+  LINK_ONLY = 'link_only',
+  PUBLIC = 'public'
 }

@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
-import { Home, Plus, Users, User, LogOut } from 'lucide-react';
+import { Home, Plus, Users, User, LogOut, Globe } from 'lucide-react';
 
 export default function Navigation() {
   const { user, logout } = useAuth();
@@ -48,6 +48,14 @@ export default function Navigation() {
               >
                 <Users size={18} />
                 <span>Friends</span>
+              </Link>
+              
+              <Link
+                to="/public"
+                className="flex items-center space-x-2 text-gray-700 hover:text-green-600 hover:bg-green-50 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+              >
+                <Globe size={18} />
+                <span>Public Listings</span>
               </Link>
             </div>
           </div>

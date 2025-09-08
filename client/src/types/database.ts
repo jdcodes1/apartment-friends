@@ -162,16 +162,16 @@ export type Listing = Database['public']['Tables']['listings']['Row'];
 export type ListingInsert = Database['public']['Tables']['listings']['Insert'];
 export type ListingUpdate = Database['public']['Tables']['listings']['Update'];
 
-export enum ListingType {
-  APARTMENT = 'apartment',
-  ROOM = 'room',
-  LOOKING_FOR = 'looking_for'
-}
+export const ListingType = {
+  APARTMENT: 'apartment' as const,
+  ROOM: 'room' as const,
+  LOOKING_FOR: 'looking_for' as const
+} as const;
 
-export enum PropertyType {
-  STUDIO = 'studio',
-  ONE_BEDROOM = '1br',
-  TWO_BEDROOM = '2br',
-  THREE_BEDROOM = '3br',
-  FOUR_PLUS_BEDROOM = '4br+'
-}
+export const PropertyType = {
+  STUDIO: 'studio' as const,
+  ONE_BEDROOM: '1br' as const,
+  TWO_BEDROOM: '2br' as const,
+  THREE_BEDROOM: '3br' as const,
+  FOUR_PLUS_BEDROOM: '4br+' as const
+} as const;

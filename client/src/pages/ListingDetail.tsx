@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "../components/layout/Navigation";
 import { type Listing } from "../types";
+import { useAuth } from "../hooks/useAuth";
 import api from "../utils/api";
 import {
   MapPin,
@@ -9,14 +10,23 @@ import {
   Mail,
   Phone,
   ArrowLeft,
+  Share2,
+  Check,
+  X,
 } from "lucide-react";
 
 export default function ListingDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [shareUrl, setShareUrl] = useState<string>("");
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [revokeLoading, setRevokeLoading] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -43,6 +53,59 @@ export default function ListingDetail() {
       day: "numeric",
     });
   };
+
+  const handleShare = async () => {
+    if (!id) return;
+
+    // Show dialog immediately
+    setShowShareDialog(true);
+    setShareLoading(true);
+
+    try {
+      const response = await api.post(`/listings/${id}/share`);
+      setShareUrl(response.data.shareUrl);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to generate share link");
+      setShowShareDialog(false); // Close dialog on error
+    } finally {
+      setShareLoading(false);
+    }
+  };
+
+  const handleRevokeShare = async () => {
+    if (!id) return;
+
+    try {
+      setRevokeLoading(true);
+      await api.delete(`/listings/${id}/share`);
+      setShareUrl("");
+      setShowShareDialog(false);
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to revoke share link");
+    } finally {
+      setRevokeLoading(false);
+    }
+  };
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy to clipboard", err);
+    }
+  };
+
+  const isOwner = user && listing && user.id === listing.owner.id;
+
+  // Debug logging
+  console.log("Debug - User:", user);
+  console.log("Debug - User _id:", user?.id);
+  console.log("Debug - Listing owner:", listing?.owner);
+  console.log("Debug - Listing owner id:", listing?.owner?.id);
+  console.log("Debug - IDs match?", user?.id === listing?.owner?.id);
+  console.log("Debug - Is owner?", isOwner);
 
   if (loading) {
     return (
@@ -105,9 +168,20 @@ export default function ListingDetail() {
                   ${listing.price.toLocaleString()}/month
                 </div>
                 {listing.propertyType && (
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-gray-600 mb-3">
                     {listing.propertyType}
                   </div>
+                )}
+
+                {isOwner && (
+                  <button
+                    onClick={handleShare}
+                    disabled={shareLoading}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Share2 size={16} className="mr-2" />
+                    {shareLoading ? "Generating..." : "Share Listing"}
+                  </button>
                 )}
               </div>
             </div>
@@ -255,6 +329,71 @@ export default function ListingDetail() {
             </div>
           </div>
         </div>
+
+        {/* Share Dialog */}
+        {showShareDialog && (
+          <div className="fixed inset-0 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full p-6 shadow-2xl border border-gray-200">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Share Listing
+                </h3>
+                <button
+                  onClick={() => setShowShareDialog(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <p className="text-gray-600 mb-4">
+                Anyone with this link can view your listing, even if they're not
+                logged in.
+              </p>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Share Link
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    value={shareUrl}
+                    readOnly
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md bg-gray-50 text-sm"
+                  />
+                  <button
+                    onClick={copyToClipboard}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 flex items-center"
+                  >
+                    {copySuccess ? <Check size={16} /> : "Copy"}
+                  </button>
+                </div>
+                {copySuccess && (
+                  <p className="text-green-600 text-sm mt-1">
+                    Copied to clipboard!
+                  </p>
+                )}
+              </div>
+
+              <div className="flex justify-between">
+                <button
+                  onClick={handleRevokeShare}
+                  disabled={revokeLoading}
+                  className="px-4 py-2 text-red-600 hover:text-red-800 disabled:opacity-50"
+                >
+                  {revokeLoading ? "Revoking..." : "Revoke Link"}
+                </button>
+                <button
+                  onClick={() => setShowShareDialog(false)}
+                  className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

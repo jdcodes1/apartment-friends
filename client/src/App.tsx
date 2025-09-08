@@ -8,6 +8,8 @@ import ListingDetail from './pages/ListingDetail';
 import Profile from './pages/Profile';
 import Friends from './pages/Friends';
 import Landing from './pages/Landing';
+import SharedListing from './pages/SharedListing';
+import PublicListings from './pages/PublicListings';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -98,6 +100,18 @@ function AppRoutes() {
             <Friends />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/public"
+        element={
+          <ProtectedRoute>
+            <PublicListings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/shared/:shareToken"
+        element={<SharedListing />}
       />
     </Routes>
   );

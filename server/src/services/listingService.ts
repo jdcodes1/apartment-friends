@@ -58,6 +58,7 @@ export class ListingService {
       images: data.images || [],
       availableDate: data.available_date,
       isActive: data.is_active,
+      owner_id: data.owner_id, // Add this for authorization checks
       owner: {
         id: data.profiles?.id,
         email: data.profiles?.email,
@@ -405,5 +406,44 @@ export class ListingService {
       createdAt: listing.created_at,
       updatedAt: listing.updated_at
     }));
+  }
+
+
+
+  private transformListing(listing: any): any {
+    return {
+      id: listing.id,
+      title: listing.title,
+      description: listing.description,
+      price: listing.price,
+      listingType: listing.listing_type,
+      address: listing.address,
+      city: listing.city,
+      state: listing.state,
+      zipCode: listing.zip_code,
+      bedrooms: listing.bedrooms,
+      bathrooms: listing.bathrooms,
+      squareFeet: listing.square_feet,
+      leaseStart: listing.lease_start,
+      leaseEnd: listing.lease_end,
+      contactEmail: listing.contact_email,
+      contactPhone: listing.contact_phone,
+      images: listing.images || [],
+      amenities: listing.amenities || [],
+      ownerId: listing.owner_id,
+      owner: listing.profiles ? {
+        id: listing.profiles.id,
+        firstName: listing.profiles.first_name,
+        lastName: listing.profiles.last_name,
+        email: listing.profiles.email,
+        phone: listing.profiles.phone,
+        createdAt: listing.profiles.created_at
+      } : null,
+      roomDetails: listing.room_details,
+      permission: listing.permission,
+      shareToken: listing.share_token,
+      createdAt: listing.created_at,
+      updatedAt: listing.updated_at
+    };
   }
 }

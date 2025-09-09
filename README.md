@@ -350,3 +350,7 @@ This project is licensed under the MIT License.
 TODOs:
 
 - add a way to comment or something on each listing?
+
+test
+
+- mobile layout

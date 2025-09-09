@@ -14,6 +14,8 @@ import {
   Share2,
   Check,
   X,
+  Edit,
+  Trash2,
 } from "lucide-react";
 
 export default function ListingDetail() {
@@ -28,6 +30,8 @@ export default function ListingDetail() {
   const [shareLoading, setShareLoading] = useState(false);
   const [revokeLoading, setRevokeLoading] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -107,6 +111,21 @@ export default function ListingDetail() {
 
     // Update the listing state with the new permission
     setListing(prev => prev ? { ...prev, permission } : null);
+  };
+
+  const handleDelete = async () => {
+    if (!id) return;
+    
+    setDeleteLoading(true);
+    try {
+      await api.delete(`/listings/${id}`);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to delete listing');
+    } finally {
+      setDeleteLoading(false);
+      setShowDeleteDialog(false);
+    }
   };
 
   const isOwner = user && listing && user.id === listing.owner.id;
@@ -191,10 +210,26 @@ export default function ListingDetail() {
                       listing={listing} 
                       onUpdate={handlePermissionUpdate} 
                     />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => navigate(`/listings/${id}/edit`)}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                      >
+                        <Edit size={16} className="mr-2" />
+                        Edit Listing
+                      </button>
+                      <button
+                        onClick={() => setShowDeleteDialog(true)}
+                        className="flex-1 inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                      >
+                        <Trash2 size={16} className="mr-2" />
+                        Delete
+                      </button>
+                    </div>
                     <button
                       onClick={handleShare}
                       disabled={shareLoading}
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Share2 size={16} className="mr-2" />
                       {shareLoading ? "Generating..." : "Share Listing"}
@@ -407,6 +442,36 @@ export default function ListingDetail() {
                   className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300"
                 >
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Dialog */}
+        {showDeleteDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">
+                Delete Listing
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this listing? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteDialog(false)}
+                  disabled={deleteLoading}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+                >
+                  {deleteLoading ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>

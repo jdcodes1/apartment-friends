@@ -241,7 +241,7 @@ export default function Dashboard() {
             {listings.map((listing) => (
               <Link
                 key={listing._id}
-                to={`/listing/${listing._id}`}
+                to={`/listings/${listing._id}`}
                 className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 hover:border-blue-300 transform hover:scale-105"
               >
                 <div className="p-6">

@@ -97,7 +97,7 @@ export default function PermissionSelector({ listing, onUpdate }: PermissionSele
       </button>
 
       {isOpen && (
-        <div className="absolute top-full mt-2 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+        <div className="absolute top-full mt-2 w-screen max-w-xs sm:w-80 left-0 sm:left-auto right-0 sm:right-auto bg-white border border-gray-200 rounded-lg shadow-lg z-10 -ml-4 sm:ml-0">
           <div className="p-4 space-y-3">
             {Object.values(ListingPermission).map((permission) => (
               <button

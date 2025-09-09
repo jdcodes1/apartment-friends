@@ -444,4 +444,70 @@ router.patch('/:id/permission', authenticateToken, async (req: AuthenticatedRequ
   }
 });
 
+// Update listing (owner only)
+router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user } = req;
+    if (!user) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const { id } = req.params;
+    const updateData = req.body;
+
+    // First check if listing exists and user is the owner
+    const existingListing = await listingService.getListingById(id);
+    if (!existingListing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (existingListing.owner_id !== user.id) {
+      return res.status(403).json({ error: 'You can only edit your own listings' });
+    }
+
+    // Update the listing
+    const updatedListing = await listingService.updateListing(id, updateData);
+    
+    res.status(200).json({
+      message: 'Listing updated successfully',
+      listing: updatedListing
+    });
+  } catch (error) {
+    console.error('Update listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Delete listing (owner only)
+router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user } = req;
+    if (!user) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const { id } = req.params;
+
+    // First check if listing exists and user is the owner
+    const existingListing = await listingService.getListingById(id);
+    if (!existingListing) {
+      return res.status(404).json({ error: 'Listing not found' });
+    }
+
+    if (existingListing.owner_id !== user.id) {
+      return res.status(403).json({ error: 'You can only delete your own listings' });
+    }
+
+    // Delete the listing
+    await listingService.deleteListing(id);
+    
+    res.status(200).json({
+      message: 'Listing deleted successfully'
+    });
+  } catch (error) {
+    console.error('Delete listing error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

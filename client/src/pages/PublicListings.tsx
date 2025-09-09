@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navigation from "../components/layout/Navigation";
+import { useAuth } from "../hooks/useAuth";
 import { type Listing, ListingType } from "../types";
 import api from "../utils/api";
 import {
@@ -15,6 +16,8 @@ import {
 } from "lucide-react";
 
 export default function PublicListings() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,6 +28,16 @@ export default function PublicListings() {
     minPrice: "",
     maxPrice: "",
   });
+
+  const handleListingClick = (listingId: string) => {
+    if (!user) {
+      // Store the intended destination and redirect to login
+      sessionStorage.setItem('redirectAfterLogin', `/listings/${listingId}`);
+      navigate('/login');
+    } else {
+      navigate(`/listings/${listingId}`);
+    }
+  };
 
   useEffect(() => {
     fetchPublicListings();
@@ -228,13 +241,23 @@ export default function PublicListings() {
             <p className="text-gray-600 mb-6 text-lg max-w-md mx-auto">
               No publicly shared listings match your criteria. Try adjusting your filters or check back later.
             </p>
-            <Link
-              to="/dashboard"
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
-            >
-              <Users size={18} className="mr-2" />
-              Browse friend listings
-            </Link>
+            {user ? (
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              >
+                <Users size={18} className="mr-2" />
+                Browse friend listings
+              </Link>
+            ) : (
+              <Link
+                to="/login"
+                className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-blue-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 shadow-lg"
+              >
+                <UserCheck size={18} className="mr-2" />
+                Sign in to browse more listings
+              </Link>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -293,13 +316,13 @@ export default function PublicListings() {
                         </div>
                       </div>
                       
-                      <Link
-                        to={`/listing/${listing._id}`}
+                      <button
+                        onClick={() => handleListingClick(listing._id)}
                         className="inline-flex items-center px-3 py-1.5 bg-gradient-to-r from-green-500 to-blue-600 text-white text-xs font-medium rounded-md hover:from-green-600 hover:to-blue-700 transition-all duration-200"
                       >
                         <ExternalLink size={12} className="mr-1" />
-                        View
-                      </Link>
+                        View {!user && "(Login Required)"}
+                      </button>
                     </div>
                   </div>
                 </div>

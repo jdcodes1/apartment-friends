@@ -4,6 +4,7 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
+import EditListing from './pages/EditListing';
 import ListingDetail from './pages/ListingDetail';
 import Profile from './pages/Profile';
 import Friends from './pages/Friends';
@@ -78,10 +79,18 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/listing/:id"
+        path="/listings/:id"
         element={
           <ProtectedRoute>
             <ListingDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/listings/:id/edit"
+        element={
+          <ProtectedRoute>
+            <EditListing />
           </ProtectedRoute>
         }
       />
@@ -103,11 +112,7 @@ function AppRoutes() {
       />
       <Route
         path="/public"
-        element={
-          <ProtectedRoute>
-            <PublicListings />
-          </ProtectedRoute>
-        }
+        element={<PublicListings />}
       />
       <Route
         path="/shared/:shareToken"

@@ -22,10 +22,16 @@ export default function CreateListing() {
     city: string;
     state: string;
     zipCode: string;
+    bedrooms: string;
+    bathrooms: string;
+    squareFeet: string;
     amenities: string;
     availableDate: string;
     furnished: boolean;
     privateBathroom: boolean;
+    totalBedrooms: string;
+    totalBathrooms: string;
+    sharedBathrooms: string;
     roommateGender: string;
     ageMin: string;
     ageMax: string;
@@ -40,10 +46,16 @@ export default function CreateListing() {
     city: '',
     state: '',
     zipCode: '',
+    bedrooms: '1',
+    bathrooms: '1',
+    squareFeet: '',
     amenities: '',
     availableDate: '',
     furnished: false,
     privateBathroom: false,
+    totalBedrooms: '',
+    totalBathrooms: '',
+    sharedBathrooms: '',
     roommateGender: 'any',
     ageMin: '',
     ageMax: '',
@@ -99,6 +111,9 @@ export default function CreateListing() {
         listingType: formData.listingType,
         propertyType: formData.propertyType,
         price: Number(formData.price),
+        bedrooms: formData.listingType === ListingType.APARTMENT ? Number(formData.bedrooms) : undefined,
+        bathrooms: formData.listingType === ListingType.APARTMENT ? Number(formData.bathrooms) : undefined,
+        squareFeet: formData.squareFeet ? Number(formData.squareFeet) : undefined,
         location: {
           address: formData.address,
           city: formData.city,
@@ -112,6 +127,9 @@ export default function CreateListing() {
         roomDetails: formData.listingType === ListingType.ROOM ? {
           furnished: formData.furnished,
           privateBathroom: formData.privateBathroom,
+          totalBedrooms: formData.totalBedrooms ? Number(formData.totalBedrooms) : undefined,
+          totalBathrooms: formData.totalBathrooms ? Number(formData.totalBathrooms) : undefined,
+          sharedBathrooms: formData.sharedBathrooms ? Number(formData.sharedBathrooms) : undefined,
           roommatePreferences: {
             gender: formData.roommateGender === 'any' ? undefined : formData.roommateGender,
             ageRange: formData.ageMin && formData.ageMax ? {
@@ -220,6 +238,70 @@ export default function CreateListing() {
                   <option value={PropertyType.THREE_BEDROOM}>3 Bedrooms</option>
                   <option value={PropertyType.FOUR_PLUS_BEDROOM}>4+ Bedrooms</option>
                 </select>
+              </div>
+            )}
+
+            {/* Apartment/Whole Property Details */}
+            {formData.listingType === ListingType.APARTMENT && (
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Property Details</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bedrooms *
+                    </label>
+                    <select
+                      name="bedrooms"
+                      value={formData.bedrooms}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="0">Studio</option>
+                      <option value="1">1 Bedroom</option>
+                      <option value="2">2 Bedrooms</option>
+                      <option value="3">3 Bedrooms</option>
+                      <option value="4">4 Bedrooms</option>
+                      <option value="5">5+ Bedrooms</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bathrooms *
+                    </label>
+                    <select
+                      name="bathrooms"
+                      value={formData.bathrooms}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="1">1 Bathroom</option>
+                      <option value="1.5">1.5 Bathrooms</option>
+                      <option value="2">2 Bathrooms</option>
+                      <option value="2.5">2.5 Bathrooms</option>
+                      <option value="3">3 Bathrooms</option>
+                      <option value="3.5">3.5 Bathrooms</option>
+                      <option value="4">4+ Bathrooms</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Square Feet
+                    </label>
+                    <input
+                      type="number"
+                      name="squareFeet"
+                      value={formData.squareFeet}
+                      onChange={handleChange}
+                      placeholder="800"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
               </div>
             )}
 
@@ -475,6 +557,71 @@ export default function CreateListing() {
                     />
                     <span className="ml-2 text-sm text-gray-700">Private Bathroom</span>
                   </label>
+                </div>
+
+                {/* Apartment Sharing Details */}
+                <div className="space-y-4">
+                  <h4 className="text-md font-medium text-gray-800 border-b pb-2">Apartment Details</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Total Bedrooms in Apartment
+                      </label>
+                      <select
+                        name="totalBedrooms"
+                        value={formData.totalBedrooms}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="1">1 Bedroom</option>
+                        <option value="2">2 Bedrooms</option>
+                        <option value="3">3 Bedrooms</option>
+                        <option value="4">4 Bedrooms</option>
+                        <option value="5">5+ Bedrooms</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Total Bathrooms in Apartment
+                      </label>
+                      <select
+                        name="totalBathrooms"
+                        value={formData.totalBathrooms}
+                        onChange={handleChange}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">Select</option>
+                        <option value="1">1 Bathroom</option>
+                        <option value="1.5">1.5 Bathrooms</option>
+                        <option value="2">2 Bathrooms</option>
+                        <option value="2.5">2.5 Bathrooms</option>
+                        <option value="3">3 Bathrooms</option>
+                        <option value="4">4+ Bathrooms</option>
+                      </select>
+                    </div>
+                    
+                    {!formData.privateBathroom && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Shared Bathrooms
+                        </label>
+                        <select
+                          name="sharedBathrooms"
+                          value={formData.sharedBathrooms}
+                          onChange={handleChange}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          <option value="">Select</option>
+                          <option value="1">1 Shared Bathroom</option>
+                          <option value="2">2 Shared Bathrooms</option>
+                          <option value="3">3 Shared Bathrooms</option>
+                        </select>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div>

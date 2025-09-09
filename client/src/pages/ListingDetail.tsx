@@ -38,7 +38,7 @@ export default function ListingDetail() {
   const fetchListing = async (listingId: string) => {
     try {
       setLoading(true);
-      const response = await api.get(`/listings/${listingId}`);
+      const response = await api.get(`/api/listings/${listingId}`);
       setListing(response.data.listing);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch listing");
@@ -63,7 +63,7 @@ export default function ListingDetail() {
     setShareLoading(true);
 
     try {
-      const response = await api.post(`/listings/${id}/share`);
+      const response = await api.post(`/api/listings/${id}/share`);
       setShareUrl(response.data.shareUrl);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to generate share link");
@@ -78,7 +78,7 @@ export default function ListingDetail() {
 
     try {
       setRevokeLoading(true);
-      await api.delete(`/listings/${id}/share`);
+      await api.delete(`/api/listings/${id}/share`);
       setShareUrl("");
       setShowShareDialog(false);
     } catch (err: any) {
@@ -101,7 +101,7 @@ export default function ListingDetail() {
   const handlePermissionUpdate = async (permission: ListingPermission) => {
     if (!id) return;
 
-    await api.patch(`/listings/${id}/permission`, {
+    await api.patch(`/api/listings/${id}/permission`, {
       permission,
     });
 

@@ -10,14 +10,22 @@ import { supabase } from './config/supabase';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
 
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? (process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : true)
-    : ['http://localhost:3000', 'http://localhost:5173'], // Vite dev server runs on 5173
+    ? [
+        'https://apartment-friends.vercel.app', // Your production frontend
+        /\.vercel\.app$/ // Any vercel.app domain
+      ]
+    : [
+        'http://localhost:3000', 
+        'http://localhost:5173', // Vite dev server
+        'https://apartment-friends.vercel.app', // Your production frontend
+        /\.vercel\.app$/ // Any vercel.app domain
+      ],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json({ limit: '10mb' }));
@@ -48,6 +56,6 @@ const initializeApp = async () => {
 
 initializeApp();
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`Server is running on port ${PORT}`);
 });

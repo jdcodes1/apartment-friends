@@ -122,7 +122,7 @@ export default function CreateListing() {
         } : undefined,
       };
 
-      await api.post('/listings', listingData);
+      await api.post('/api/listings', listingData);
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create listing');

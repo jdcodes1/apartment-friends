@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           try {
             // Validate token and refresh user data
-            const response = await api.get('/auth/me');
+            const response = await api.get('/api/auth/me');
             setUser(response.data.user);
           } catch (error) {
             // If token is invalid, clear storage but don't throw
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await api.post<AuthResponse>('/auth/login', {
+      const response = await api.post<AuthResponse>('/api/auth/login', {
         email,
         password,
       });
@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (userData: RegisterData) => {
     try {
-      const response = await api.post<AuthResponse>('/auth/register', userData);
+      const response = await api.post<AuthResponse>('/api/auth/register', userData);
 
       const { user, token } = response.data;
       localStorage.setItem('token', token);

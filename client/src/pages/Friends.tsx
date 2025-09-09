@@ -25,7 +25,7 @@ export default function Friends() {
 
   const fetchFriends = async () => {
     try {
-      const response = await api.get("/friends/list");
+      const response = await api.get("/api/friends/list");
       setFriends(response.data.friends);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch friends");
@@ -34,7 +34,7 @@ export default function Friends() {
 
   const fetchPendingRequests = async () => {
     try {
-      const response = await api.get("/friends/requests");
+      const response = await api.get("/api/friends/requests");
       setPendingRequests(response.data);
     } catch (err: any) {
       console.error("Failed to fetch pending requests:", err);
@@ -45,7 +45,7 @@ export default function Friends() {
 
   const acceptRequest = async (connectionId: string) => {
     try {
-      await api.post(`/friends/accept-request/${connectionId}`);
+      await api.post(`/api/friends/accept-request/${connectionId}`);
       await fetchFriends();
       await fetchPendingRequests();
     } catch (err: any) {
@@ -56,7 +56,7 @@ export default function Friends() {
   const removeFriend = async (friendId: string) => {
     if (window.confirm("Are you sure you want to remove this friend?")) {
       try {
-        await api.delete(`/friends/remove/${friendId}`);
+        await api.delete(`/api/friends/remove/${friendId}`);
         await fetchFriends();
       } catch (err: any) {
         setError(err.response?.data?.message || "Failed to remove friend");

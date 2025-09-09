@@ -41,7 +41,7 @@ export default function Dashboard() {
       if (filters.minPrice) params.append("minPrice", filters.minPrice);
       if (filters.maxPrice) params.append("maxPrice", filters.maxPrice);
 
-      const response = await api.get(`/listings?${params.toString()}`);
+      const response = await api.get(`/api/listings?${params.toString()}`);
       setListings(response.data.listings);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch listings");

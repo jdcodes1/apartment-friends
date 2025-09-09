@@ -67,7 +67,7 @@ export default function FacebookConnect({ onSuccess, onError }: FacebookConnectP
   const handleFacebookResponse = async (authResponse: any) => {
     try {
       // Connect Facebook account to user
-      const connectResponse = await api.post('/api/facebook/connect-account', {
+      const connectResponse = await api.post('/facebook/connect-account', {
         accessToken: authResponse.accessToken
       });
 
@@ -110,7 +110,7 @@ export default function FacebookConnect({ onSuccess, onError }: FacebookConnectP
 
   const importFriendsWithToken = async (accessToken: string) => {
     try {
-      const response = await api.post('/api/facebook/import-friends', {
+      const response = await api.post('/facebook/import-friends', {
         accessToken: accessToken
       });
 
@@ -126,7 +126,7 @@ export default function FacebookConnect({ onSuccess, onError }: FacebookConnectP
   const disconnectFacebook = async () => {
     try {
       setLoading(true);
-      await api.delete('/api/facebook/disconnect-account');
+      await api.delete('/facebook/disconnect-account');
       setConnected(false);
       onSuccess?.({ message: 'Facebook account disconnected' });
     } catch (error: any) {

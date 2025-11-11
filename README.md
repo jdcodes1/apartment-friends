@@ -4,7 +4,8 @@ A fullstack web application that allows users to list and search for apartments 
 
 ## Features
 
-- **User Authentication**: Secure registration and login system
+- **📱 Phone Authentication with Magic Codes**: Passwordless login using SMS verification (no more passwords!)
+- **🏠 Zillow Import**: Automatically import listing details from Zillow URLs
 - **Friend Network**: Connect with friends and build your housing network
 - **3-Degree Friend Filtering**: Only see listings from friends within 3 degrees of separation
 - **Multiple Listing Types**:
@@ -14,6 +15,19 @@ A fullstack web application that allows users to list and search for apartments 
 - **Facebook Integration**: Import friends from Facebook to expand your network
 - **Advanced Search**: Filter by location, price, property type, and more
 - **Room Details**: Special features for room listings (furnished, private bathroom, roommate preferences)
+- **Privacy Controls**: Private, link-only, or public listing visibility
+
+## 🆕 New Features Setup
+
+**Phone Authentication & Zillow Import** are new features that require additional setup:
+
+👉 **[See PHONE_AUTH_SETUP.md for complete setup instructions](./PHONE_AUTH_SETUP.md)**
+
+Quick overview:
+- **Phone Auth**: Uses Twilio for SMS verification codes (works in dev mode without Twilio)
+- **Zillow Import**: Parse Zillow listing URLs to auto-fill property details
+- **Requires**: Two new database migrations
+- **Optional**: Twilio account for real SMS (free tier available)
 
 ## Tech Stack
 

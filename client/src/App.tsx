@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import LoginForm from './components/auth/LoginForm';
-import RegisterForm from './components/auth/RegisterForm';
+import PhoneAuthPage from './pages/PhoneAuthPage';
 import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
 import EditListing from './pages/EditListing';
@@ -50,7 +49,7 @@ function AppRoutes() {
         path="/login"
         element={
           <PublicRoute>
-            <LoginForm />
+            <PhoneAuthPage />
           </PublicRoute>
         }
       />
@@ -58,7 +57,7 @@ function AppRoutes() {
         path="/register"
         element={
           <PublicRoute>
-            <RegisterForm />
+            <PhoneAuthPage />
           </PublicRoute>
         }
       />

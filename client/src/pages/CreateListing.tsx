@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/layout/Navigation';
+import ZillowImport from '../components/listings/ZillowImport';
 import { ListingType, PropertyType, ListingPermission } from '../types';
 import type { ListingType as ListingTypeType, PropertyType as PropertyTypeType, ListingPermission as ListingPermissionType } from '../types';
 import api from '../utils/api';
@@ -159,6 +160,56 @@ export default function CreateListing() {
     }
   };
 
+  const handleZillowImport = (zillowData: any) => {
+    // Map Zillow data to form fields
+    const updates: any = {};
+
+    if (zillowData.title) updates.title = zillowData.title;
+    if (zillowData.description) updates.description = zillowData.description;
+    if (zillowData.price) updates.price = zillowData.price.toString();
+    if (zillowData.address) updates.address = zillowData.address;
+    if (zillowData.city) updates.city = zillowData.city;
+    if (zillowData.state) updates.state = zillowData.state;
+    if (zillowData.zip_code) updates.zipCode = zillowData.zip_code;
+
+    // Map property type
+    if (zillowData.property_type) {
+      const typeMap: { [key: string]: PropertyTypeType } = {
+        'studio': PropertyType.STUDIO,
+        '1br': PropertyType.ONE_BEDROOM,
+        '2br': PropertyType.TWO_BEDROOM,
+        '3br': PropertyType.THREE_BEDROOM,
+        '4br+': PropertyType.FOUR_PLUS_BEDROOM,
+      };
+      if (typeMap[zillowData.property_type]) {
+        updates.propertyType = typeMap[zillowData.property_type];
+      }
+    }
+
+    // Map room details
+    if (zillowData.room_details) {
+      if (zillowData.room_details.bedrooms !== undefined) {
+        updates.bedrooms = zillowData.room_details.bedrooms.toString();
+      }
+      if (zillowData.room_details.bathrooms !== undefined) {
+        updates.bathrooms = zillowData.room_details.bathrooms.toString();
+      }
+      if (zillowData.room_details.square_feet !== undefined) {
+        updates.squareFeet = zillowData.room_details.square_feet.toString();
+      }
+    }
+
+    // Map amenities
+    if (zillowData.amenities && zillowData.amenities.length > 0) {
+      updates.amenities = zillowData.amenities.join(', ');
+    }
+
+    // Set listing type to apartment by default for Zillow imports
+    updates.listingType = ListingType.APARTMENT;
+
+    setFormData({ ...formData, ...updates });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -166,12 +217,14 @@ export default function CreateListing() {
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-2xl font-bold text-gray-900 mb-6">Create New Listing</h1>
-          
+
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
               {error}
             </div>
           )}
+
+          <ZillowImport onImport={handleZillowImport} />
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>

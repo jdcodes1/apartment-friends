@@ -19,7 +19,9 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
+    "axios": "^1.13.2",
     "bcryptjs": "^3.0.2",
+    "cheerio": "^1.1.2",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
@@ -28,6 +30,7 @@
     "passport": "^0.7.0",
     "passport-facebook-token": "^4.0.0",
     "ts-node": "^10.9.2",
+    "twilio": "^5.10.5",
     "typescript": "^5.9.2"
   }
 }

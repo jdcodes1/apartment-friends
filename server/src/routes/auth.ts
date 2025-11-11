@@ -1,12 +1,14 @@
 import express, { Request, Response } from 'express';
 import { AuthService } from '../services/authService';
 import { ProfileService } from '../services/profileService';
+import { PhoneAuthService } from '../services/phoneAuthService';
 import { validateEmail, validatePassword } from '../utils/auth';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
 const authService = new AuthService();
 const profileService = new ProfileService();
+const phoneAuthService = new PhoneAuthService();
 
 interface RegisterBody {
   email: string;
@@ -161,6 +163,101 @@ router.post('/update-password', authenticateToken, async (req: AuthenticatedRequ
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
     console.error('Update password error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ========================================
+// PHONE AUTHENTICATION ENDPOINTS
+// ========================================
+
+interface SendCodeBody {
+  phoneNumber: string;
+}
+
+interface VerifyCodeBody {
+  phoneNumber: string;
+  code: string;
+  firstName?: string;
+  lastName?: string;
+}
+
+/**
+ * Send verification code to phone number
+ * POST /api/auth/send-code
+ */
+router.post('/send-code', async (req: Request<{}, {}, SendCodeBody>, res: Response) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    const result = await phoneAuthService.sendVerificationCode(phoneNumber);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+
+    res.json({ message: result.message });
+  } catch (error: any) {
+    console.error('Send code error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Verify code and login/register
+ * POST /api/auth/verify-code
+ */
+router.post('/verify-code', async (req: Request<{}, {}, VerifyCodeBody>, res: Response) => {
+  try {
+    const { phoneNumber, code, firstName, lastName } = req.body;
+
+    if (!phoneNumber || !code) {
+      return res.status(400).json({ error: 'Phone number and code are required' });
+    }
+
+    const result = await phoneAuthService.verifyCode(phoneNumber, code, firstName, lastName);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.message });
+    }
+
+    res.json({
+      message: result.message,
+      user: result.profile,
+      token: result.session?.access_token || result.session?.user_id,
+      session: result.session,
+      isNewUser: result.isNewUser
+    });
+  } catch (error: any) {
+    console.error('Verify code error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
+ * Check if phone number is already registered
+ * POST /api/auth/check-phone
+ */
+router.post('/check-phone', async (req: Request, res: Response) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      return res.status(400).json({ error: 'Phone number is required' });
+    }
+
+    const { data: profile } = await profileService.getProfileByPhone(phoneNumber);
+
+    res.json({
+      exists: !!profile,
+      requiresRegistration: !profile
+    });
+  } catch (error) {
+    console.error('Check phone error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

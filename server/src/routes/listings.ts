@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import { ListingService } from '../services/listingService';
 import { FriendService } from '../services/friendService';
 import { ProfileService } from '../services/profileService';
+import { ZillowParserService } from '../services/zillowParser';
 import { ListingType, ListingPermission } from '../types/database';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 
@@ -9,6 +10,7 @@ const router = express.Router();
 const listingService = new ListingService();
 const friendService = new FriendService();
 const profileService = new ProfileService();
+const zillowParser = new ZillowParserService();
 
 router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
   try {
@@ -500,13 +502,57 @@ router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: 
 
     // Delete the listing
     await listingService.deleteListing(id);
-    
+
     res.status(200).json({
       message: 'Listing deleted successfully'
     });
   } catch (error) {
     console.error('Delete listing error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// ========================================
+// ZILLOW IMPORT ENDPOINT
+// ========================================
+
+/**
+ * Parse a Zillow listing URL and return the extracted data
+ * POST /api/listings/parse-zillow
+ */
+router.post('/parse-zillow', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const { user } = req;
+    if (!user) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const { zillowUrl } = req.body;
+
+    if (!zillowUrl) {
+      return res.status(400).json({ error: 'Zillow URL is required' });
+    }
+
+    console.log('Parsing Zillow URL:', zillowUrl);
+
+    // Parse the Zillow listing
+    const result = await zillowParser.parseZillowListing(zillowUrl);
+
+    if (!result.success) {
+      return res.status(400).json({ error: result.error });
+    }
+
+    // Convert to our listing format
+    const listingData = zillowParser.convertToListingFormat(result.data!, zillowUrl);
+
+    res.json({
+      message: 'Zillow listing parsed successfully',
+      data: listingData,
+      raw: result.data // Include raw data for debugging
+    });
+  } catch (error: any) {
+    console.error('Parse Zillow error:', error);
+    res.status(500).json({ error: 'Failed to parse Zillow listing' });
   }
 });
 

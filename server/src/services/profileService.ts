@@ -35,6 +35,17 @@ export class ProfileService {
     return data;
   }
 
+  async getProfileByPhone(phone: string): Promise<{ data: Profile | null; error?: any }> {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('phone', phone)
+      .single();
+
+    if (error && error.code !== 'PGRST116') return { data: null, error: null };
+    return { data, error: null };
+  }
+
   async getProfileByFacebookId(facebookId: string): Promise<Profile | null> {
     const { data, error } = await supabase
       .from('profiles')

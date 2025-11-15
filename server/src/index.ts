@@ -5,7 +5,10 @@ import authRoutes from './routes/auth';
 import listingRoutes from './routes/listings';
 import friendRoutes from './routes/friends';
 import facebookRoutes from './routes/facebook';
+import uploadRoutes from './routes/upload';
 import { supabase } from './config/supabase';
+import { ImageUploadService } from './services/imageUploadService';
+import { apiLimiter } from './middleware/rateLimiter';
 
 dotenv.config();
 
@@ -31,6 +34,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Apply rate limiting to all API routes
+app.use('/api/', apiLimiter);
+
 app.get('/', (req, res) => {
   res.json({ message: 'Apartment Rental API is running with Supabase!' });
 });
@@ -39,6 +45,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/facebook', facebookRoutes);
+app.use('/api/upload', uploadRoutes);
 
 const initializeApp = async () => {
   try {
@@ -49,6 +56,10 @@ const initializeApp = async () => {
     } else {
       console.log('Supabase connected successfully');
     }
+
+    // Initialize storage bucket for images
+    const imageUploadService = new ImageUploadService();
+    await imageUploadService.ensureBucketExists();
   } catch (error) {
     console.error('Supabase connection failed:', error);
   }

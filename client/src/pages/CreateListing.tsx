@@ -2,17 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/layout/Navigation';
 import ZillowImport from '../components/listings/ZillowImport';
+import ImageUpload from '../components/listings/ImageUpload';
 import { ListingType, PropertyType, ListingPermission } from '../types';
 import type { ListingType as ListingTypeType, PropertyType as PropertyTypeType, ListingPermission as ListingPermissionType } from '../types';
 import api from '../utils/api';
-import { Upload, X, Lock, Link, Globe } from 'lucide-react';
+import { Lock, Link, Globe } from 'lucide-react';
 
 export default function CreateListing() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [images, setImages] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [images, setImages] = useState<string[]>([]);
   const [formData, setFormData] = useState<{
     title: string;
     description: string;
@@ -63,49 +63,12 @@ export default function CreateListing() {
     permission: ListingPermission.PRIVATE,
   });
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    if (files.length === 0) return;
-
-    // Limit to 5 images total
-    const newImages = [...images, ...files].slice(0, 5);
-    setImages(newImages);
-
-    // Create preview URLs
-    const newPreviews = newImages.map(file => URL.createObjectURL(file));
-    // Clean up old preview URLs
-    imagePreviews.forEach(url => URL.revokeObjectURL(url));
-    setImagePreviews(newPreviews);
-  };
-
-  const removeImage = (index: number) => {
-    const newImages = images.filter((_, i) => i !== index);
-    const newPreviews = imagePreviews.filter((_, i) => i !== index);
-    
-    // Clean up the removed preview URL
-    URL.revokeObjectURL(imagePreviews[index]);
-    
-    setImages(newImages);
-    setImagePreviews(newPreviews);
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      // Convert images to base64
-      const imageBase64Array = await Promise.all(
-        images.map(image => {
-          return new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(image);
-          });
-        })
-      );
-
       const listingData = {
         title: formData.title,
         description: formData.description,
@@ -122,7 +85,7 @@ export default function CreateListing() {
           zipCode: formData.zipCode,
         },
         amenities: formData.amenities.split(',').map(a => a.trim()).filter(a => a),
-        images: imageBase64Array,
+        images: images,
         availableDate: formData.availableDate,
         permission: formData.permission,
         roomDetails: formData.listingType === ListingType.ROOM ? {
@@ -525,64 +488,11 @@ export default function CreateListing() {
               </div>
             </div>
 
-            {/* Image Upload Section */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Photos (up to 5)
-              </label>
-              <div className="space-y-4">
-                {/* Upload Area */}
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors">
-                  <input
-                    type="file"
-                    id="image-upload"
-                    multiple
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="image-upload"
-                    className="cursor-pointer flex flex-col items-center space-y-2"
-                  >
-                    <Upload size={32} className="text-gray-400" />
-                    <div>
-                      <span className="text-blue-600 font-medium">Upload photos</span>
-                      <span className="text-gray-600"> or drag and drop</span>
-                    </div>
-                    <p className="text-sm text-gray-500">PNG, JPG up to 10MB each</p>
-                  </label>
-                </div>
-
-                {/* Image Previews */}
-                {imagePreviews.length > 0 && (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {imagePreviews.map((preview, index) => (
-                      <div key={index} className="relative group">
-                        <img
-                          src={preview}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-32 object-cover rounded-lg border border-gray-200"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                        >
-                          <X size={16} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {images.length >= 5 && (
-                  <p className="text-sm text-orange-600">
-                    Maximum of 5 images allowed. Remove some to add more.
-                  </p>
-                )}
-              </div>
-            </div>
+            <ImageUpload
+              images={images}
+              onChange={setImages}
+              maxImages={10}
+            />
 
             {formData.listingType === ListingType.ROOM && (
               <div className="space-y-4">

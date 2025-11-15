@@ -130,14 +130,6 @@ export default function ListingDetail() {
 
   const isOwner = user && listing && user.id === listing.owner.id;
 
-  // Debug logging
-  console.log("Debug - User:", user);
-  console.log("Debug - User _id:", user?.id);
-  console.log("Debug - Listing owner:", listing?.owner);
-  console.log("Debug - Listing owner id:", listing?.owner?.id);
-  console.log("Debug - IDs match?", user?.id === listing?.owner?.id);
-  console.log("Debug - Is owner?", isOwner);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">

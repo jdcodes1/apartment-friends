@@ -5,6 +5,8 @@ import { ProfileService } from '../services/profileService';
 import { ZillowParserService } from '../services/zillowParser';
 import { ListingType, ListingPermission } from '../types/database';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+import { createListingLimiter, strictLimiter } from '../middleware/rateLimiter';
+import { sanitizeString } from '../utils/validation';
 
 const router = express.Router();
 const listingService = new ListingService();
@@ -12,7 +14,7 @@ const friendService = new FriendService();
 const profileService = new ProfileService();
 const zillowParser = new ZillowParserService();
 
-router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/', authenticateToken, createListingLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { user, profile } = req;
     if (!user || !profile) {
@@ -71,13 +73,13 @@ router.post('/', authenticateToken, async (req: AuthenticatedRequest, res: Respo
     }
 
     const listingData = {
-      title,
-      description,
+      title: sanitizeString(title),
+      description: sanitizeString(description),
       listing_type: listingType,
       property_type: propertyType,
       price: Number(price),
-      address,
-      city,
+      address: sanitizeString(address),
+      city: sanitizeString(city),
       state: state.toUpperCase(),
       zip_code: zipCode,
       latitude: latitude ? Number(latitude) : null,
@@ -109,9 +111,15 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
     }
 
     const { type, city, state, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
-    
-    const filters: any = {};
-    
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+
+    const filters: any = {
+      page: pageNum,
+      limit: limitNum
+    };
+
     if (type && Object.values(ListingType).includes(type as ListingType)) {
       filters.listingType = type;
     }
@@ -133,23 +141,15 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
     }
 
     // Get listings - RLS will automatically filter to friend network
-    const listings = await listingService.getActiveListings(filters);
-
-    // Simple pagination for now (can be improved with proper offset/limit)
-    const pageNum = Number(page);
-    const limitNum = Number(limit);
-    const startIndex = (pageNum - 1) * limitNum;
-    const endIndex = startIndex + limitNum;
-    
-    const paginatedListings = listings.slice(startIndex, endIndex);
+    const { listings, total } = await listingService.getActiveListings(filters);
 
     res.json({
-      listings: paginatedListings,
+      listings,
       pagination: {
         page: pageNum,
         limit: limitNum,
-        total: listings.length,
-        pages: Math.ceil(listings.length / limitNum)
+        total,
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {
@@ -177,9 +177,15 @@ router.get('/my-listings', authenticateToken, async (req: AuthenticatedRequest, 
 router.get('/public', async (req: Request, res: Response) => {
   try {
     const { type, city, state, minPrice, maxPrice, page = 1, limit = 10 } = req.query;
-    
-    const filters: any = {};
-    
+
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+
+    const filters: any = {
+      page: pageNum,
+      limit: limitNum
+    };
+
     if (type && Object.values(ListingType).includes(type as ListingType)) {
       filters.listingType = type;
     }
@@ -201,23 +207,15 @@ router.get('/public', async (req: Request, res: Response) => {
     }
 
     // Get only public listings (permission = 'public')
-    const listings = await listingService.getPublicListings(filters);
-
-    // Simple pagination
-    const pageNum = Number(page);
-    const limitNum = Number(limit);
-    const startIndex = (pageNum - 1) * limitNum;
-    const endIndex = startIndex + limitNum;
-    
-    const paginatedListings = listings.slice(startIndex, endIndex);
+    const { listings, total } = await listingService.getPublicListings(filters);
 
     res.json({
-      listings: paginatedListings,
+      listings,
       pagination: {
         page: pageNum,
         limit: limitNum,
-        total: listings.length,
-        pages: Math.ceil(listings.length / limitNum)
+        total,
+        pages: Math.ceil(total / limitNum)
       }
     });
   } catch (error) {
@@ -265,7 +263,7 @@ router.get('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Res
   }
 });
 
-router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.put('/:id', authenticateToken, strictLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { user, profile } = req;
     if (!user || !profile) {
@@ -313,7 +311,7 @@ router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Res
   }
 });
 
-router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.delete('/:id', authenticateToken, strictLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { user, profile } = req;
     if (!user || !profile) {
@@ -442,72 +440,6 @@ router.patch('/:id/permission', authenticateToken, async (req: AuthenticatedRequ
     });
   } catch (error) {
     console.error('Update listing permission error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Update listing (owner only)
-router.put('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { user } = req;
-    if (!user) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const { id } = req.params;
-    const updateData = req.body;
-
-    // First check if listing exists and user is the owner
-    const existingListing = await listingService.getListingById(id);
-    if (!existingListing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
-
-    if (existingListing.owner_id !== user.id) {
-      return res.status(403).json({ error: 'You can only edit your own listings' });
-    }
-
-    // Update the listing
-    const updatedListing = await listingService.updateListing(id, updateData);
-    
-    res.status(200).json({
-      message: 'Listing updated successfully',
-      listing: updatedListing
-    });
-  } catch (error) {
-    console.error('Update listing error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Delete listing (owner only)
-router.delete('/:id', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { user } = req;
-    if (!user) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const { id } = req.params;
-
-    // First check if listing exists and user is the owner
-    const existingListing = await listingService.getListingById(id);
-    if (!existingListing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
-
-    if (existingListing.owner_id !== user.id) {
-      return res.status(403).json({ error: 'You can only delete your own listings' });
-    }
-
-    // Delete the listing
-    await listingService.deleteListing(id);
-
-    res.status(200).json({
-      message: 'Listing deleted successfully'
-    });
-  } catch (error) {
-    console.error('Delete listing error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

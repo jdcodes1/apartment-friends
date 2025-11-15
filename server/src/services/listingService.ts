@@ -106,7 +106,9 @@ export class ListingService {
     maxPrice?: number;
     city?: string;
     state?: string;
-  }): Promise<any[]> {
+    page?: number;
+    limit?: number;
+  }): Promise<{ listings: any[], total: number }> {
     let query = supabase
       .from('listings')
       .select(`
@@ -119,7 +121,7 @@ export class ListingService {
           profile_picture,
           created_at
         )
-      `)
+      `, { count: 'exact' })
       .eq('is_active', true);
 
     if (filters) {
@@ -145,10 +147,20 @@ export class ListingService {
 
     query = query.order('created_at', { ascending: false });
 
-    const { data, error } = await query;
+    // Add pagination
+    if (filters?.page !== undefined && filters?.limit !== undefined) {
+      const from = (filters.page - 1) * filters.limit;
+      const to = from + filters.limit - 1;
+      query = query.range(from, to);
+    }
+
+    const { data, error, count } = await query;
     if (error) throw error;
-    
-    return this.transformListings(data || []);
+
+    return {
+      listings: this.transformListings(data || []),
+      total: count || 0
+    };
   }
 
   async updateListing(id: string, updates: ListingUpdate): Promise<Listing | null> {
@@ -324,7 +336,9 @@ export class ListingService {
     maxPrice?: number;
     city?: string;
     state?: string;
-  }): Promise<any[]> {
+    page?: number;
+    limit?: number;
+  }): Promise<{ listings: any[], total: number }> {
     let query = supabase
       .from('listings')
       .select(`
@@ -336,7 +350,7 @@ export class ListingService {
           profile_picture,
           created_at
         )
-      `)
+      `, { count: 'exact' })
       .eq('is_active', true)
       .eq('permission', 'public'); // Only get public listings
 
@@ -363,10 +377,20 @@ export class ListingService {
 
     query = query.order('created_at', { ascending: false });
 
-    const { data, error } = await query;
+    // Add pagination
+    if (filters?.page !== undefined && filters?.limit !== undefined) {
+      const from = (filters.page - 1) * filters.limit;
+      const to = from + filters.limit - 1;
+      query = query.range(from, to);
+    }
+
+    const { data, error, count } = await query;
     if (error) throw error;
-    
-    return this.transformListings(data || []);
+
+    return {
+      listings: this.transformListings(data || []),
+      total: count || 0
+    };
   }
 
   private transformListings(listings: any[]): any[] {

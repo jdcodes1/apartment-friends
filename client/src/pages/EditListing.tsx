@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../utils/api';
 import { ListingType } from '../types';
+import ImageUpload from '../components/listings/ImageUpload';
 
 interface EditListingForm {
   title: string;
@@ -393,6 +394,12 @@ const EditListing: React.FC = () => {
             />
           </div>
         </div>
+
+        <ImageUpload
+          images={formData.images}
+          onChange={(newImages) => setFormData(prev => ({ ...prev, images: newImages }))}
+          maxImages={10}
+        />
 
         <div className="flex gap-4">
           <button

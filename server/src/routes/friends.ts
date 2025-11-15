@@ -2,12 +2,13 @@ import express, { Request, Response } from 'express';
 import { FriendService } from '../services/friendService';
 import { ProfileService } from '../services/profileService';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
+import { friendRequestLimiter } from '../middleware/rateLimiter';
 
 const router = express.Router();
 const friendService = new FriendService();
 const profileService = new ProfileService();
 
-router.post('/send-request', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
+router.post('/send-request', authenticateToken, friendRequestLimiter, async (req: AuthenticatedRequest, res: Response) => {
   try {
     const { user, profile } = req;
     if (!user || !profile) {

@@ -204,7 +204,7 @@ export default function Friends() {
                     <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">
                       2
                     </span>
-                    Share email addresses to send friend requests
+                    Send a friend request by searching for their phone number
                   </li>
                   <li className="flex items-start">
                     <span className="bg-blue-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-0.5">

@@ -363,3 +363,9 @@ This project is licensed under the MIT License.
 - [ ] Payment integration for rent collection
 
 TODOs:
+
+- whenever a link is shared, only friends can view it. so if anyone else tries to open it, they won't have permission.
+- allow me to edit the listings on the same page (dont take me to /edit).
+- right after account creation, user should be prompted to share their phone contacts so they can see friends listings.
+- I should also be able to search for a phone number and add it as a friend, and that person must accept in order for us to be friends. this
+  functionality should be under the friends tab.

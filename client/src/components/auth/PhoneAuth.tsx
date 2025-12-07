@@ -1,39 +1,38 @@
-import React, { useState } from 'react';
-import { Phone, ArrowRight, Check } from 'lucide-react';
-import api from '../../utils/api';
+import React, { useState } from "react";
+import { Phone, ArrowRight, Check } from "lucide-react";
+import api from "../../utils/api";
 
 interface PhoneAuthProps {
-  onSuccess: (token: string, user: any) => void;
+  onSuccess: (token: string, user: any, redirectPath?: string) => void;
+  mode?: "login" | "register";
 }
 
-const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess }) => {
-  const [step, setStep] = useState<'phone' | 'code' | 'register'>('phone');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [error, setError] = useState('');
+const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess, mode = "login" }) => {
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [code, setCode] = useState(["", "", "", "", "", ""]);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isNewUser, setIsNewUser] = useState(false);
+
+  const isRegister = mode === "register";
 
   const formatPhoneNumber = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
-
-    // Format as (XXX) XXX-XXXX
+    const digits = value.replace(/\D/g, "");
     if (digits.length <= 3) {
       return digits;
     } else if (digits.length <= 6) {
       return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
     } else {
-      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6, 10)}`;
+      return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(
+        6,
+        10
+      )}`;
     }
   };
 
   const getE164Format = (formatted: string) => {
-    // Convert to E.164 format: +1XXXXXXXXXX
-    const digits = formatted.replace(/\D/g, '');
-    return '+1' + digits;
+    const digits = formatted.replace(/\D/g, "");
+    return "+1" + digits;
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,25 +42,21 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess }) => {
 
   const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const e164Phone = getE164Format(phoneNumber);
-
-      // Validate phone number
       if (e164Phone.length !== 12) {
-        throw new Error('Please enter a valid 10-digit phone number');
+        throw new Error("Please enter a valid 10-digit phone number");
       }
 
-      // Send verification code
-      await api.post('/auth/send-code', {
-        phoneNumber: e164Phone
-      });
-
-      setStep('code');
+      await api.post("/auth/send-code", { phoneNumber: e164Phone });
+      setStep("code");
     } catch (err: any) {
-      setError(err.response?.data?.error || err.message || 'Failed to send code');
+      setError(
+        err.response?.data?.error || err.message || "Failed to send code"
+      );
     } finally {
       setLoading(false);
     }
@@ -69,103 +64,69 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess }) => {
 
   const handleCodeChange = (index: number, value: string) => {
     if (value.length > 1) {
-      // Handle paste
-      const digits = value.replace(/\D/g, '').slice(0, 6);
+      const digits = value.replace(/\D/g, "").slice(0, 6);
       const newCode = [...code];
       for (let i = 0; i < digits.length && index + i < 6; i++) {
         newCode[index + i] = digits[i];
       }
       setCode(newCode);
-
-      // Focus on the next empty input or the last one
       const nextIndex = Math.min(index + digits.length, 5);
       document.getElementById(`code-${nextIndex}`)?.focus();
     } else {
       const newCode = [...code];
       newCode[index] = value;
       setCode(newCode);
-
-      // Auto-focus next input
       if (value && index < 5) {
         document.getElementById(`code-${index + 1}`)?.focus();
       }
     }
   };
 
-  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
+  const handleCodeKeyDown = (
+    index: number,
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
       document.getElementById(`code-${index - 1}`)?.focus();
     }
   };
 
   const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
       const e164Phone = getE164Format(phoneNumber);
-      const codeString = code.join('');
+      const codeString = code.join("");
 
       if (codeString.length !== 6) {
-        throw new Error('Please enter the complete 6-digit code');
+        throw new Error("Please enter the complete 6-digit code");
       }
 
-      // Verify the code
-      const response = await api.post('/auth/verify-code', {
+      const response = await api.post("/auth/verify-code", {
         phoneNumber: e164Phone,
         code: codeString,
-        ...(isNewUser && { firstName, lastName })
       });
 
-      if (response.data.isNewUser && !firstName && !lastName) {
-        // Need to collect name for new user
-        setIsNewUser(true);
-        setStep('register');
+      const { user, token } = response.data;
+
+      if (user.profileComplete) {
+        onSuccess(token, user);
       } else {
-        // Success - login/registration complete
-        onSuccess(response.data.token, response.data.user);
+        onSuccess(token, user, "/complete-profile");
       }
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Invalid code. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      if (!firstName.trim() || !lastName.trim()) {
-        throw new Error('Please enter your first and last name');
-      }
-
-      const e164Phone = getE164Format(phoneNumber);
-      const codeString = code.join('');
-
-      // Verify the code with user info
-      const response = await api.post('/auth/verify-code', {
-        phoneNumber: e164Phone,
-        code: codeString,
-        firstName: firstName.trim(),
-        lastName: lastName.trim()
-      });
-
-      onSuccess(response.data.token, response.data.user);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create account. Please try again.');
+      setError(err.response?.data?.error || "Invalid code. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleResendCode = async () => {
-    setError('');
-    setCode(['', '', '', '', '', '']);
-    await handleSendCode(new Event('submit') as any);
+    setError("");
+    setCode(["", "", "", "", "", ""]);
+    await handleSendCode(new Event("submit") as any);
   };
 
   return (
@@ -176,14 +137,12 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess }) => {
             <Phone className="w-8 h-8 text-blue-600" />
           </div>
           <h2 className="text-2xl font-bold text-gray-900">
-            {step === 'phone' && 'Sign in with Phone'}
-            {step === 'code' && 'Enter Verification Code'}
-            {step === 'register' && 'Complete Your Profile'}
+            {step === "phone" && (isRegister ? "Create your account" : "Welcome back")}
+            {step === "code" && "Enter Verification Code"}
           </h2>
           <p className="text-gray-600 mt-2">
-            {step === 'phone' && 'Enter your phone number to get started'}
-            {step === 'code' && `We sent a code to ${phoneNumber}`}
-            {step === 'register' && 'Just a few more details to get started'}
+            {step === "phone" && (isRegister ? "Let's get started with your phone number" : "Sign in with your phone number")}
+            {step === "code" && `We sent a code to ${phoneNumber}`}
           </p>
         </div>
 
@@ -193,10 +152,13 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess }) => {
           </div>
         )}
 
-        {step === 'phone' && (
+        {step === "phone" && (
           <form onSubmit={handleSendCode}>
             <div className="mb-6">
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+              <label
+                htmlFor="phone"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
                 Phone Number
               </label>
               <div className="relative">
@@ -221,16 +183,16 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess }) => {
 
             <button
               type="submit"
-              disabled={loading || phoneNumber.replace(/\D/g, '').length !== 10}
+              disabled={loading || phoneNumber.replace(/\D/g, "").length !== 10}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
             >
-              {loading ? 'Sending...' : 'Send Code'}
+              {loading ? "Sending..." : (isRegister ? "Get Started" : "Send Code")}
               {!loading && <ArrowRight className="w-5 h-5" />}
             </button>
           </form>
         )}
 
-        {step === 'code' && (
+        {step === "code" && (
           <form onSubmit={handleVerifyCode}>
             <div className="mb-6">
               <label className="block text-sm font-medium text-gray-700 mb-4 text-center">
@@ -265,62 +227,19 @@ const PhoneAuth: React.FC<PhoneAuthProps> = ({ onSuccess }) => {
 
             <button
               type="submit"
-              disabled={loading || code.some(d => !d)}
+              disabled={loading || code.some((d) => !d)}
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
             >
-              {loading ? 'Verifying...' : 'Verify Code'}
+              {loading ? "Verifying..." : "Verify Code"}
               {!loading && <Check className="w-5 h-5" />}
             </button>
 
             <button
               type="button"
-              onClick={() => setStep('phone')}
+              onClick={() => setStep("phone")}
               className="w-full mt-3 text-gray-600 hover:text-gray-800 py-2"
             >
               Change phone number
-            </button>
-          </form>
-        )}
-
-        {step === 'register' && (
-          <form onSubmit={handleRegister}>
-            <div className="space-y-4 mb-6">
-              <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </label>
-                <input
-                  id="firstName"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </label>
-                <input
-                  id="lastName"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading || !firstName.trim() || !lastName.trim()}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
-            >
-              {loading ? 'Creating Account...' : 'Create Account'}
-              {!loading && <Check className="w-5 h-5" />}
             </button>
           </form>
         )}

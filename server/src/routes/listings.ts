@@ -3,7 +3,7 @@ import { ListingService } from '../services/listingService';
 import { FriendService } from '../services/friendService';
 import { ProfileService } from '../services/profileService';
 import { ZillowParserService } from '../services/zillowParser';
-import { ListingType, ListingPermission } from '../types/database';
+import { ListingType } from '../types/database';
 import { authenticateToken, AuthenticatedRequest } from '../middleware/auth';
 import { createListingLimiter, strictLimiter } from '../middleware/rateLimiter';
 import { sanitizeString } from '../utils/validation';
@@ -398,48 +398,6 @@ router.delete('/:id/share', authenticateToken, async (req: AuthenticatedRequest,
     res.json({ message: 'Share link revoked successfully' });
   } catch (error) {
     console.error('Revoke share token error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// Update listing permission (owner only)
-router.patch('/:id/permission', authenticateToken, async (req: AuthenticatedRequest, res: Response) => {
-  try {
-    const { user, profile } = req;
-    if (!user || !profile) {
-      return res.status(401).json({ error: 'User not authenticated' });
-    }
-
-    const { permission } = req.body;
-
-    if (!permission || !Object.values(ListingPermission).includes(permission as ListingPermission)) {
-      return res.status(400).json({ 
-        error: 'Invalid permission value',
-        validPermissions: Object.values(ListingPermission)
-      });
-    }
-
-    const listing = await listingService.getListingById(req.params.id);
-    
-    if (!listing) {
-      return res.status(404).json({ error: 'Listing not found' });
-    }
-
-    if (listing.owner.id !== user.id) {
-      return res.status(403).json({ error: 'You can only change permissions for your own listings' });
-    }
-
-    const updatedListing = await listingService.updateListingPermission(
-      req.params.id, 
-      permission as ListingPermission
-    );
-
-    res.json({
-      message: 'Listing permission updated successfully',
-      listing: updatedListing
-    });
-  } catch (error) {
-    console.error('Update listing permission error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

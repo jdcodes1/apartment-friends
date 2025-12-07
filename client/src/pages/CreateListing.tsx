@@ -3,10 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '../components/layout/Navigation';
 import ZillowImport from '../components/listings/ZillowImport';
 import ImageUpload from '../components/listings/ImageUpload';
-import { ListingType, PropertyType, ListingPermission } from '../types';
-import type { ListingType as ListingTypeType, PropertyType as PropertyTypeType, ListingPermission as ListingPermissionType } from '../types';
+import { ListingType, PropertyType } from '../types';
+import type { ListingType as ListingTypeType, PropertyType as PropertyTypeType } from '../types';
 import api from '../utils/api';
-import { Lock, Link, Globe } from 'lucide-react';
 
 export default function CreateListing() {
   const navigate = useNavigate();
@@ -36,7 +35,6 @@ export default function CreateListing() {
     roommateGender: string;
     ageMin: string;
     ageMax: string;
-    permission: ListingPermissionType;
   }>({
     title: '',
     description: '',
@@ -60,7 +58,6 @@ export default function CreateListing() {
     roommateGender: 'any',
     ageMin: '',
     ageMax: '',
-    permission: ListingPermission.PRIVATE,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -431,61 +428,6 @@ export default function CreateListing() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <p className="text-sm text-gray-500 mt-1">Separate amenities with commas</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-3">
-                Visibility *
-              </label>
-              <div className="space-y-3">
-                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="permission"
-                    value={ListingPermission.PRIVATE}
-                    checked={formData.permission === ListingPermission.PRIVATE}
-                    onChange={handleChange}
-                    className="mr-3 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Lock size={18} className="text-red-600 mr-3" />
-                  <div>
-                    <div className="font-medium text-gray-900">Private</div>
-                    <div className="text-sm text-gray-600">Only you and friends in your network can see this listing</div>
-                  </div>
-                </label>
-
-                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="permission"
-                    value={ListingPermission.LINK_ONLY}
-                    checked={formData.permission === ListingPermission.LINK_ONLY}
-                    onChange={handleChange}
-                    className="mr-3 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Link size={18} className="text-blue-600 mr-3" />
-                  <div>
-                    <div className="font-medium text-gray-900">Link Only</div>
-                    <div className="text-sm text-gray-600">Anyone with the share link can view, but it won't appear in public listings</div>
-                  </div>
-                </label>
-
-                <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-                  <input
-                    type="radio"
-                    name="permission"
-                    value={ListingPermission.PUBLIC}
-                    checked={formData.permission === ListingPermission.PUBLIC}
-                    onChange={handleChange}
-                    className="mr-3 text-blue-600 focus:ring-blue-500"
-                  />
-                  <Globe size={18} className="text-green-600 mr-3" />
-                  <div>
-                    <div className="font-medium text-gray-900">Public</div>
-                    <div className="text-sm text-gray-600">Everyone can see this listing in the public section</div>
-                  </div>
-                </label>
-              </div>
             </div>
 
             <ImageUpload

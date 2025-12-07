@@ -1,11 +1,16 @@
-import { supabaseClient } from '../config/supabase';
-import { ProfileService } from './profileService';
-import { Profile } from '../types/database';
+import { supabaseClient } from "../config/supabase";
+import { ProfileService } from "./profileService";
+import { Profile } from "../types/database";
 
 export class AuthService {
   private profileService = new ProfileService();
 
-  async signUp(email: string, password: string, firstName: string, lastName: string): Promise<{ user: any; profile: Profile | null }> {
+  async signUp(
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string
+  ): Promise<{ user: any; profile: Profile | null }> {
     const { data, error } = await supabaseClient.auth.signUp({
       email,
       password,
@@ -23,19 +28,21 @@ export class AuthService {
     let profile = null;
     if (data.user) {
       // Wait a moment for the trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
       profile = await this.profileService.getProfileById(data.user.id);
-      
+
       // If profile doesn't exist, create it manually (fallback if trigger fails)
       if (!profile) {
-        console.log('Profile not found after registration, creating manually for user:', data.user.id);
+        console.log(
+          "Profile not found after registration, creating manually for user:",
+          data.user.id
+        );
         profile = await this.profileService.createProfile({
           id: data.user.id,
-          email: email.toLowerCase(),
           first_name: firstName.trim(),
           last_name: lastName.trim(),
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         });
       }
     }
@@ -44,7 +51,10 @@ export class AuthService {
     return { user: data.session, profile };
   }
 
-  async signIn(email: string, password: string): Promise<{ user: any; profile: Profile | null }> {
+  async signIn(
+    email: string,
+    password: string
+  ): Promise<{ user: any; profile: Profile | null }> {
     const { data, error } = await supabaseClient.auth.signInWithPassword({
       email,
       password,
@@ -55,18 +65,20 @@ export class AuthService {
     let profile = null;
     if (data.user) {
       profile = await this.profileService.getProfileById(data.user.id);
-      
+
       // If profile doesn't exist, create it from user metadata
       if (!profile && data.user.user_metadata) {
-        console.log('Profile not found for user, creating from metadata:', data.user.id);
+        console.log(
+          "Profile not found for user, creating from metadata:",
+          data.user.id
+        );
         const { first_name, last_name } = data.user.user_metadata;
         profile = await this.profileService.createProfile({
           id: data.user.id,
-          email: data.user.email!,
-          first_name: first_name || 'User',
-          last_name: last_name || '',
+          first_name: first_name || "User",
+          last_name: last_name || "",
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         });
       }
     }
@@ -81,7 +93,10 @@ export class AuthService {
   }
 
   async getCurrentUser(): Promise<any> {
-    const { data: { user }, error } = await supabaseClient.auth.getUser();
+    const {
+      data: { user },
+      error,
+    } = await supabaseClient.auth.getUser();
     if (error) throw error;
     return user;
   }
@@ -92,7 +107,9 @@ export class AuthService {
     return await this.profileService.getProfileById(user.id);
   }
 
-  async verifyToken(token: string): Promise<{ user: any; profile: Profile | null }> {
+  async verifyToken(
+    token: string
+  ): Promise<{ user: any; profile: Profile | null }> {
     const { data, error } = await supabaseClient.auth.getUser(token);
     if (error) throw error;
 
@@ -118,7 +135,10 @@ export class AuthService {
     if (error) throw error;
   }
 
-  async updateUserMetadata(updates: { email?: string; data?: Record<string, any> }): Promise<any> {
+  async updateUserMetadata(updates: {
+    email?: string;
+    data?: Record<string, any>;
+  }): Promise<any> {
     const { data, error } = await supabaseClient.auth.updateUser(updates);
     if (error) throw error;
     return data.user;
@@ -127,11 +147,11 @@ export class AuthService {
   async deleteUser(): Promise<void> {
     // This requires admin privileges - typically handled by a separate admin service
     const user = await this.getCurrentUser();
-    if (!user) throw new Error('No authenticated user');
+    if (!user) throw new Error("No authenticated user");
 
     // Delete the profile (which will cascade to delete related data)
     await this.profileService.deleteProfile(user.id);
-    
+
     // Note: Deleting the auth user requires admin privileges
     // This should be handled by a separate admin API or webhook
   }

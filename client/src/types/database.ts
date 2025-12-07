@@ -4,7 +4,6 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
-          email: string;
           first_name: string;
           last_name: string;
           profile_picture: string | null;
@@ -15,7 +14,6 @@ export interface Database {
         };
         Insert: {
           id: string;
-          email: string;
           first_name: string;
           last_name: string;
           profile_picture?: string | null;
@@ -26,7 +24,6 @@ export interface Database {
         };
         Update: {
           id?: string;
-          email?: string;
           first_name?: string;
           last_name?: string;
           profile_picture?: string | null;
@@ -41,7 +38,7 @@ export interface Database {
           id: string;
           user1: string;
           user2: string;
-          status: 'pending' | 'accepted' | 'blocked';
+          status: "pending" | "accepted" | "blocked";
           requested_by: string;
           created_at: string;
           updated_at: string;
@@ -50,7 +47,7 @@ export interface Database {
           id?: string;
           user1: string;
           user2: string;
-          status?: 'pending' | 'accepted' | 'blocked';
+          status?: "pending" | "accepted" | "blocked";
           requested_by: string;
           created_at?: string;
           updated_at?: string;
@@ -59,7 +56,7 @@ export interface Database {
           id?: string;
           user1?: string;
           user2?: string;
-          status?: 'pending' | 'accepted' | 'blocked';
+          status?: "pending" | "accepted" | "blocked";
           requested_by?: string;
           created_at?: string;
           updated_at?: string;
@@ -70,8 +67,8 @@ export interface Database {
           id: string;
           title: string;
           description: string;
-          listing_type: 'apartment' | 'room' | 'looking_for';
-          property_type: 'studio' | '1br' | '2br' | '3br' | '4br+' | null;
+          listing_type: "apartment" | "room" | "looking_for";
+          property_type: "studio" | "1br" | "2br" | "3br" | "4br+" | null;
           price: number;
           address: string;
           city: string;
@@ -92,8 +89,8 @@ export interface Database {
           id?: string;
           title: string;
           description: string;
-          listing_type: 'apartment' | 'room' | 'looking_for';
-          property_type?: 'studio' | '1br' | '2br' | '3br' | '4br+' | null;
+          listing_type: "apartment" | "room" | "looking_for";
+          property_type?: "studio" | "1br" | "2br" | "3br" | "4br+" | null;
           price: number;
           address: string;
           city: string;
@@ -114,8 +111,8 @@ export interface Database {
           id?: string;
           title?: string;
           description?: string;
-          listing_type?: 'apartment' | 'room' | 'looking_for';
-          property_type?: 'studio' | '1br' | '2br' | '3br' | '4br+' | null;
+          listing_type?: "apartment" | "room" | "looking_for";
+          property_type?: "studio" | "1br" | "2br" | "3br" | "4br+" | null;
           price?: number;
           address?: string;
           city?: string;
@@ -141,7 +138,7 @@ export interface RoomDetails {
   furnished?: boolean;
   privateBathroom?: boolean;
   roommatePreferences?: {
-    gender?: 'male' | 'female' | 'any';
+    gender?: "male" | "female" | "any";
     ageRange?: {
       min: number;
       max: number;
@@ -150,28 +147,31 @@ export interface RoomDetails {
   };
 }
 
-export type Profile = Database['public']['Tables']['profiles']['Row'];
-export type ProfileInsert = Database['public']['Tables']['profiles']['Insert'];
-export type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
+export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+export type ProfileInsert = Database["public"]["Tables"]["profiles"]["Insert"];
+export type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
 
-export type FriendConnection = Database['public']['Tables']['friend_connections']['Row'];
-export type FriendConnectionInsert = Database['public']['Tables']['friend_connections']['Insert'];
-export type FriendConnectionUpdate = Database['public']['Tables']['friend_connections']['Update'];
+export type FriendConnection =
+  Database["public"]["Tables"]["friend_connections"]["Row"];
+export type FriendConnectionInsert =
+  Database["public"]["Tables"]["friend_connections"]["Insert"];
+export type FriendConnectionUpdate =
+  Database["public"]["Tables"]["friend_connections"]["Update"];
 
-export type Listing = Database['public']['Tables']['listings']['Row'];
-export type ListingInsert = Database['public']['Tables']['listings']['Insert'];
-export type ListingUpdate = Database['public']['Tables']['listings']['Update'];
+export type Listing = Database["public"]["Tables"]["listings"]["Row"];
+export type ListingInsert = Database["public"]["Tables"]["listings"]["Insert"];
+export type ListingUpdate = Database["public"]["Tables"]["listings"]["Update"];
 
 export const ListingType = {
-  APARTMENT: 'apartment' as const,
-  ROOM: 'room' as const,
-  LOOKING_FOR: 'looking_for' as const
+  APARTMENT: "apartment" as const,
+  ROOM: "room" as const,
+  LOOKING_FOR: "looking_for" as const,
 } as const;
 
 export const PropertyType = {
-  STUDIO: 'studio' as const,
-  ONE_BEDROOM: '1br' as const,
-  TWO_BEDROOM: '2br' as const,
-  THREE_BEDROOM: '3br' as const,
-  FOUR_PLUS_BEDROOM: '4br+' as const
+  STUDIO: "studio" as const,
+  ONE_BEDROOM: "1br" as const,
+  TWO_BEDROOM: "2br" as const,
+  THREE_BEDROOM: "3br" as const,
+  FOUR_PLUS_BEDROOM: "4br+" as const,
 } as const;

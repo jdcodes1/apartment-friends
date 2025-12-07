@@ -49,6 +49,39 @@ export const authenticateToken = async (req: AuthenticatedRequest, res: Response
   }
 };
 
+/**
+ * Like authenticateToken but doesn't require a profile to exist
+ * Use this for endpoints where user might not have a profile yet (e.g., complete-profile)
+ */
+export const authenticateTokenOnly = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (!token) {
+      return res.status(401).json({ error: 'Access token required' });
+    }
+
+    const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+
+    if (error || !user) {
+      console.error('Token validation error:', error);
+      return res.status(403).json({ error: 'Invalid or expired token' });
+    }
+
+    // Try to get profile but don't fail if it doesn't exist
+    const profileService = new ProfileService();
+    const profile = await profileService.getProfileById(user.id);
+
+    req.user = user;
+    req.profile = profile || undefined;
+    next();
+  } catch (error) {
+    console.error('Auth middleware error:', error);
+    res.status(500).json({ error: 'Internal server error during authentication' });
+  }
+};
+
 export const optionalAuth = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;

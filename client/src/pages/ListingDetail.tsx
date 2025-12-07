@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import Navigation from "../components/layout/Navigation";
-import PermissionSelector from "../components/listings/PermissionSelector";
-import { type Listing, ListingPermission } from "../types";
+import { type Listing } from "../types";
 import { useAuth } from "../hooks/useAuth";
 import api from "../utils/api";
 import {
@@ -102,17 +101,6 @@ export default function ListingDetail() {
     }
   };
 
-  const handlePermissionUpdate = async (permission: ListingPermission) => {
-    if (!id) return;
-
-    await api.patch(`/listings/${id}/permission`, {
-      permission,
-    });
-
-    // Update the listing state with the new permission
-    setListing(prev => prev ? { ...prev, permission } : null);
-  };
-
   const handleDelete = async () => {
     if (!id) return;
     
@@ -198,10 +186,6 @@ export default function ListingDetail() {
 
                 {isOwner && (
                   <div className="space-y-3">
-                    <PermissionSelector 
-                      listing={listing} 
-                      onUpdate={handlePermissionUpdate} 
-                    />
                     <div className="flex gap-2">
                       <button
                         onClick={() => navigate(`/listings/${id}/edit`)}

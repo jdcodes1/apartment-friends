@@ -24,6 +24,7 @@ A fullstack web application that allows users to list and search for apartments 
 👉 **[See PHONE_AUTH_SETUP.md for complete setup instructions](./PHONE_AUTH_SETUP.md)**
 
 Quick overview:
+
 - **Phone Auth**: Uses Twilio for SMS verification codes (works in dev mode without Twilio)
 - **Zillow Import**: Parse Zillow listing URLs to auto-fill property details
 - **Requires**: Two new database migrations
@@ -362,5 +363,3 @@ This project is licensed under the MIT License.
 - [ ] Payment integration for rent collection
 
 TODOs:
-
-- add a way to comment or something on each listing?

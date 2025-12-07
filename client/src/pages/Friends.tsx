@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import Navigation from "../components/layout/Navigation";
-import FacebookConnect from "../components/auth/FacebookConnect";
 import { type User, type FriendConnection } from "../types";
 import api from "../utils/api";
-import { UserPlus, Check, X } from "lucide-react";
+import { UserPlus, Check, X, Phone } from "lucide-react";
 
 export default function Friends() {
   const [friends, setFriends] = useState<User[]>([]);
@@ -64,19 +63,6 @@ export default function Friends() {
     }
   };
 
-  const handleFacebookSuccess = (response: any) => {
-    setSuccessMessage(response.message);
-    setError("");
-    // Refresh data
-    fetchFriends();
-    fetchPendingRequests();
-  };
-
-  const handleFacebookError = (errorMessage: string) => {
-    setError(errorMessage);
-    setSuccessMessage("");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
@@ -133,14 +119,6 @@ export default function Friends() {
             </div>
           </div>
         )}
-
-        {/* Facebook Integration */}
-        <div className="mb-8">
-          <FacebookConnect
-            onSuccess={handleFacebookSuccess}
-            onError={handleFacebookError}
-          />
-        </div>
 
         {/* Pending Friend Requests */}
         {pendingRequests.incoming.length > 0 && (

@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { Listing, ListingInsert, ListingUpdate, ListingPermission } from '../types/database';
+import { Listing, ListingInsert, ListingUpdate } from '../types/database';
 import { randomBytes } from 'crypto';
 
 export class ListingService {
@@ -64,7 +64,7 @@ export class ListingService {
         email: data.profiles?.email,
         firstName: data.profiles?.first_name,
         lastName: data.profiles?.last_name,
-        phone: data.profiles?.phone,
+        phone: data.profiles?.phone_number,
         profilePicture: data.profiles?.profile_picture,
         createdAt: data.profiles?.created_at
       },
@@ -167,28 +167,6 @@ export class ListingService {
     const { data, error } = await supabase
       .from('listings')
       .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
-
-    if (error) throw error;
-    return data;
-  }
-
-  async updateListingPermission(id: string, permission: ListingPermission): Promise<Listing | null> {
-    // When setting to link_only, generate share token if it doesn't exist
-    let updateData: { permission: ListingPermission; share_token?: string } = { permission };
-    
-    if (permission === ListingPermission.LINK_ONLY) {
-      const existing = await this.getListingById(id);
-      if (!existing?.shareToken) {
-        updateData.share_token = randomBytes(32).toString('hex');
-      }
-    }
-
-    const { data, error } = await supabase
-      .from('listings')
-      .update(updateData)
       .eq('id', id)
       .select()
       .single();
@@ -308,7 +286,7 @@ export class ListingService {
         id: data.profiles?.id,
         firstName: data.profiles?.first_name,
         lastName: data.profiles?.last_name,
-        phone: data.profiles?.phone,
+        phone: data.profiles?.phone_number,
         profilePicture: data.profiles?.profile_picture,
         createdAt: data.profiles?.created_at
       },
@@ -420,7 +398,7 @@ export class ListingService {
         email: listing.profiles?.email,
         firstName: listing.profiles?.first_name,
         lastName: listing.profiles?.last_name,
-        phone: listing.profiles?.phone,
+        phone: listing.profiles?.phone_number,
         profilePicture: listing.profiles?.profile_picture,
         createdAt: listing.profiles?.created_at
       },
@@ -460,7 +438,7 @@ export class ListingService {
         firstName: listing.profiles.first_name,
         lastName: listing.profiles.last_name,
         email: listing.profiles.email,
-        phone: listing.profiles.phone,
+        phone: listing.profiles.phone_number,
         createdAt: listing.profiles.created_at
       } : null,
       roomDetails: listing.room_details,

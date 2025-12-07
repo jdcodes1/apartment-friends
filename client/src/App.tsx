@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import PhoneAuthPage from './pages/PhoneAuthPage';
+import ProfileCompletion from './pages/ProfileCompletion';
 import Dashboard from './pages/Dashboard';
 import CreateListing from './pages/CreateListing';
 import EditListing from './pages/EditListing';
@@ -11,7 +12,7 @@ import Landing from './pages/Landing';
 import SharedListing from './pages/SharedListing';
 import PublicListings from './pages/PublicListings';
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children, requireCompleteProfile = true }: { children: React.ReactNode; requireCompleteProfile?: boolean }) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -20,6 +21,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Redirect to profile completion if profile is incomplete
+  if (requireCompleteProfile && !user.profileComplete) {
+    return <Navigate to="/complete-profile" replace />;
   }
 
   return <>{children}</>;
@@ -41,7 +47,7 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { user } = useAuth();
-  
+
   return (
     <Routes>
       <Route path="/" element={user ? <Navigate to="/dashboard" replace /> : <Landing />} />
@@ -59,6 +65,14 @@ function AppRoutes() {
           <PublicRoute>
             <PhoneAuthPage />
           </PublicRoute>
+        }
+      />
+      <Route
+        path="/complete-profile"
+        element={
+          <ProtectedRoute requireCompleteProfile={false}>
+            <ProfileCompletion />
+          </ProtectedRoute>
         }
       />
       <Route

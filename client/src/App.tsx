@@ -10,7 +10,6 @@ import Profile from './pages/Profile';
 import Friends from './pages/Friends';
 import Landing from './pages/Landing';
 import SharedListing from './pages/SharedListing';
-import PublicListings from './pages/PublicListings';
 
 function ProtectedRoute({ children, requireCompleteProfile = true }: { children: React.ReactNode; requireCompleteProfile?: boolean }) {
   const { user, loading } = useAuth();
@@ -122,10 +121,6 @@ function AppRoutes() {
             <Friends />
           </ProtectedRoute>
         }
-      />
-      <Route
-        path="/public"
-        element={<PublicListings />}
       />
       <Route
         path="/shared/:shareToken"

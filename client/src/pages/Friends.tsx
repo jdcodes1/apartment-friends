@@ -25,7 +25,7 @@ export default function Friends() {
   const fetchFriends = async () => {
     try {
       const response = await api.get("/friends/list");
-      setFriends(response.data.friends);
+      setFriends(response.data?.friends || []);
     } catch (err: any) {
       setError(err.response?.data?.message || "Failed to fetch friends");
     }
@@ -34,7 +34,10 @@ export default function Friends() {
   const fetchPendingRequests = async () => {
     try {
       const response = await api.get("/friends/requests");
-      setPendingRequests(response.data);
+      setPendingRequests({
+        incoming: response.data?.incoming || [],
+        outgoing: response.data?.outgoing || [],
+      });
     } catch (err: any) {
       console.error("Failed to fetch pending requests:", err);
     } finally {

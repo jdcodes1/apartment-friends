@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
-import { Home, Plus, Users, User, LogOut, Globe, Menu, X } from "lucide-react";
+import { Home, Plus, Users, User, LogOut, Menu, X } from "lucide-react";
 
 export default function Navigation() {
   const { user, logout } = useAuth();
@@ -73,28 +73,6 @@ export default function Navigation() {
                     <span>Friends</span>
                   </Link>
 
-                  <Link
-                    to="/public"
-                    className="flex items-center space-x-2 text-secondary px-4 py-2 text-sm font-medium transition-smooth hover:scale-105"
-                    style={{ borderRadius: "var(--border-radius-md)" }}
-                  >
-                    <Globe size={18} />
-                    <span>Public Listings</span>
-                  </Link>
-                </div>
-              )}
-
-              {/* Always show Public link for unauthenticated users */}
-              {!user && (
-                <div className="hidden sm:flex items-center">
-                  <Link
-                    to="/public"
-                    className="flex items-center space-x-2 text-secondary px-4 py-2 text-sm font-medium transition-smooth hover:scale-105"
-                    style={{ borderRadius: "var(--border-radius-md)" }}
-                  >
-                    <Globe size={18} />
-                    <span>Public Listings</span>
-                  </Link>
                 </div>
               )}
             </div>
@@ -226,16 +204,6 @@ export default function Navigation() {
                   </Link>
 
                   <Link
-                    to="/public"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center space-x-3 px-4 py-3 text-secondary transition-smooth"
-                    style={{ borderRadius: "var(--border-radius-md)" }}
-                  >
-                    <Globe size={20} />
-                    <span>Public Listings</span>
-                  </Link>
-
-                  <Link
                     to="/profile"
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center space-x-3 px-4 py-3 text-secondary transition-smooth"
@@ -262,16 +230,6 @@ export default function Navigation() {
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/public"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="flex items-center space-x-3 px-4 py-3 text-secondary transition-smooth"
-                    style={{ borderRadius: "var(--border-radius-md)" }}
-                  >
-                    <Globe size={20} />
-                    <span>Public Listings</span>
-                  </Link>
-
                   <Link
                     to="/login"
                     onClick={() => setMobileMenuOpen(false)}

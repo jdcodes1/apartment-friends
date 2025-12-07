@@ -152,9 +152,10 @@ router.get('/', authenticateToken, async (req: AuthenticatedRequest, res: Respon
         pages: Math.ceil(total / limitNum)
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get listings error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Error details:', error?.message, error?.code, error?.details);
+    res.status(500).json({ error: error?.message || 'Internal server error' });
   }
 });
 

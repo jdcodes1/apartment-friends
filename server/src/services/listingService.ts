@@ -21,11 +21,10 @@ export class ListingService {
         *,
         profiles:owner_id (
           id,
-          email,
           first_name,
           last_name,
           profile_picture,
-          phone,
+          phone_number,
           created_at
         )
       `)
@@ -61,7 +60,6 @@ export class ListingService {
       owner_id: data.owner_id, // Add this for authorization checks
       owner: {
         id: data.profiles?.id,
-        email: data.profiles?.email,
         firstName: data.profiles?.first_name,
         lastName: data.profiles?.last_name,
         phone: data.profiles?.phone_number,
@@ -83,11 +81,10 @@ export class ListingService {
         *,
         profiles:owner_id (
           id,
-          email,
           first_name,
           last_name,
           profile_picture,
-          phone,
+          phone_number,
           created_at
         )
       `)
@@ -115,9 +112,9 @@ export class ListingService {
         *,
         profiles:owner_id (
           id,
-          email,
           first_name,
           last_name,
+          phone_number,
           profile_picture,
           created_at
         )
@@ -195,11 +192,10 @@ export class ListingService {
         *,
         profiles:owner_id (
           id,
-          email,
           first_name,
           last_name,
           profile_picture,
-          phone,
+          phone_number,
           created_at
         )
       `)
@@ -249,7 +245,7 @@ export class ListingService {
           first_name,
           last_name,
           profile_picture,
-          phone,
+          phone_number,
           created_at
         )
       `)
@@ -395,7 +391,6 @@ export class ListingService {
       isActive: listing.is_active,
       owner: {
         id: listing.profiles?.id,
-        email: listing.profiles?.email,
         firstName: listing.profiles?.first_name,
         lastName: listing.profiles?.last_name,
         phone: listing.profiles?.phone_number,
@@ -437,7 +432,6 @@ export class ListingService {
         id: listing.profiles.id,
         firstName: listing.profiles.first_name,
         lastName: listing.profiles.last_name,
-        email: listing.profiles.email,
         phone: listing.profiles.phone_number,
         createdAt: listing.profiles.created_at
       } : null,

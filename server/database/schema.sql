@@ -4,7 +4,6 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Users table (Supabase auth will handle basic auth, but we need additional fields)
 CREATE TABLE profiles (
   id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
   profile_picture TEXT,
@@ -57,7 +56,6 @@ CREATE TABLE listings (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_profiles_email ON profiles(email);
 CREATE INDEX idx_profiles_facebook_id ON profiles(facebook_id) WHERE facebook_id IS NOT NULL;
 
 CREATE INDEX idx_friend_connections_user1_status ON friend_connections(user1, status);
@@ -167,10 +165,9 @@ CREATE POLICY "Users can view listings from friends within 3 degrees" ON listing
 CREATE OR REPLACE FUNCTION handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO profiles (id, email, first_name, last_name)
+  INSERT INTO profiles (id, first_name, last_name)
   VALUES (
     NEW.id,
-    NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'first_name', ''),
     COALESCE(NEW.raw_user_meta_data->>'last_name', '')
   );

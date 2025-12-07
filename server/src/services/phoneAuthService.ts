@@ -82,6 +82,15 @@ export class PhoneAuthService {
 
       console.log("[PhoneAuthService] OTP verified, user ID:", data.user.id);
 
+      // Ensure phone_verified is set to true using admin API
+      const { error: updateError } = await supabase.auth.admin.updateUserById(
+        data.user.id,
+        { phone_confirm: true }
+      );
+      if (updateError) {
+        console.error("[PhoneAuthService] Failed to update phone_verified:", updateError);
+      }
+
       // Check if profile already exists
       const { data: existingProfile } = await supabase
         .from("profiles")
